@@ -1,0 +1,57 @@
+{
+  "name": "kalshi-node",
+  "version": "1.0.0",
+  "description": "TypeScript REST + WebSocket client for the Kalshi Trade API v2",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./auth": {
+      "types": "./dist/auth.d.ts",
+      "import": "./dist/auth.js"
+    },
+    "./types": {
+      "types": "./dist/types/index.d.ts",
+      "import": "./dist/types/index.js"
+    },
+    "./types/*": {
+      "types": "./dist/types/*.d.ts",
+      "import": "./dist/types/*.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:e2e": "vitest run --config vitest.e2e.config.ts",
+    "prepublishOnly": "npm run build"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/myerich/kalshi-node.git"
+  },
+  "keywords": [
+    "kalshi",
+    "prediction-market",
+    "trading",
+    "api-client",
+    "websocket"
+  ],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/node": "^25.2.1",
+    "@types/ws": "^8.18.1",
+    "dotenv": "^17.2.4",
+    "typescript": "^5.9.3",
+    "vitest": "^4.0.18",
+    "ws": "^8.19.0"
+  }
+}
