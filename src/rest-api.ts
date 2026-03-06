@@ -1,5 +1,5 @@
 import * as crypto from "crypto";
-import { generateHeaders, loadPrivateKey } from "./auth";
+import { generateHeaders, loadPrivateKey, loadPrivateKeyFromContent } from "./auth";
 import type {
   ExchangeStatus,
   ExchangeAnnouncementsResponse,
@@ -95,6 +95,9 @@ import type {
 
 export interface KalshiClientConfig {
   apiKey?: string;
+  /** PEM key string (takes precedence over privateKeyPath). */
+  privateKey?: string;
+  /** Path to a PEM key file. Used if privateKey is not provided. */
   privateKeyPath?: string;
   baseUrl?: string;
 }
@@ -116,14 +119,16 @@ export class KalshiClient {
       );
     }
 
-    const keyPath =
-      config.privateKeyPath ?? process.env.KALSHI_PROD_KEY_FILE ?? "";
-    if (!keyPath) {
+    const keyString = config.privateKey ?? process.env.KALSHI_PROD_KEY ?? "";
+    const keyPath = config.privateKeyPath ?? process.env.KALSHI_PROD_KEY_FILE ?? "";
+    if (!keyString && !keyPath) {
       throw new Error(
-        "Private key path is required. Pass privateKeyPath in config or set KALSHI_PROD_KEY_FILE env var."
+        "Private key is required. Pass privateKey or privateKeyPath in config, or set KALSHI_PROD_KEY or KALSHI_PROD_KEY_FILE env var."
       );
     }
-    this.privateKey = loadPrivateKey(keyPath);
+    this.privateKey = keyString
+      ? loadPrivateKeyFromContent(keyString)
+      : loadPrivateKey(keyPath);
   }
 
   // ==================== Internal request helpers ====================

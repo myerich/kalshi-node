@@ -7,12 +7,13 @@ const { privateKey: testPrivateKey } = crypto.generateKeyPairSync("rsa", {
   modulusLength: 2048,
 });
 
-// Mock loadPrivateKey so we don't need a real PEM file on disk
+// Mock key-loading functions so we don't need real PEM files on disk
 vi.mock("./auth", async (importOriginal) => {
   const actual = await importOriginal<typeof import("./auth")>();
   return {
     ...actual,
     loadPrivateKey: vi.fn(() => testPrivateKey),
+    loadPrivateKeyFromContent: vi.fn(() => testPrivateKey),
   };
 });
 
@@ -65,9 +66,11 @@ describe("KalshiClient constructor", () => {
     }
   });
 
-  it("throws when private key path is missing", () => {
+  it("throws when private key is missing", () => {
     const origFile = process.env.KALSHI_PROD_KEY_FILE;
+    const origKey = process.env.KALSHI_PROD_KEY;
     delete process.env.KALSHI_PROD_KEY_FILE;
+    delete process.env.KALSHI_PROD_KEY;
     try {
       expect(
         () =>
@@ -75,10 +78,19 @@ describe("KalshiClient constructor", () => {
             apiKey: "test-key",
             privateKeyPath: "",
           })
-      ).toThrow("Private key path is required");
+      ).toThrow("Private key is required");
     } finally {
       if (origFile) process.env.KALSHI_PROD_KEY_FILE = origFile;
+      if (origKey) process.env.KALSHI_PROD_KEY = origKey;
     }
+  });
+
+  it("accepts privateKey string directly", () => {
+    const client = new KalshiClient({
+      apiKey: "test-key",
+      privateKey: "inline-pem",
+    });
+    expect(client).toBeInstanceOf(KalshiClient);
   });
 
   it("falls back to env vars for credentials", () => {
@@ -90,6 +102,18 @@ describe("KalshiClient constructor", () => {
     } finally {
       delete process.env.KALSHI_PROD_KEY_ID;
       delete process.env.KALSHI_PROD_KEY_FILE;
+    }
+  });
+
+  it("falls back to KALSHI_PROD_KEY env var for key string", () => {
+    process.env.KALSHI_PROD_KEY_ID = "env-key";
+    process.env.KALSHI_PROD_KEY = "inline-pem-from-env";
+    try {
+      const client = new KalshiClient();
+      expect(client).toBeInstanceOf(KalshiClient);
+    } finally {
+      delete process.env.KALSHI_PROD_KEY_ID;
+      delete process.env.KALSHI_PROD_KEY;
     }
   });
 });
@@ -422,7 +446,7 @@ describe("KalshiClient public methods", () => {
     fetchSpy.mockResolvedValue(
       mockResponse({ orders: [], cursor: "" })
     );
-    await client.getPortfolioOrders({ status: "open" });
+    await client.getPortfolioOrders({ status: "resting" });
     expect(callUrl()).toContain("/portfolio/orders");
     expect(callHeaders()["KALSHI-ACCESS-KEY"]).toBe("test-key");
   });

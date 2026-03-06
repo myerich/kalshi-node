@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeAll } from "vitest";
 import { getClient } from "./client";
-import { KalshiClient } from "../../src/kalshi-client/index";
-import type { Market } from "../../src/kalshi-client/types";
+import { KalshiClient } from "../../src/index";
+import type { Market } from "../../src/types";
 
 let client: KalshiClient;
 

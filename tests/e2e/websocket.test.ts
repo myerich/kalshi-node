@@ -1,18 +1,20 @@
 import { describe, it, expect, beforeAll, afterAll, afterEach } from "vitest";
 import WebSocketNode from "ws";
-import { KalshiWebSocketClient } from "../../src/kalshi-client/ws-api";
+import { KalshiWebSocketClient } from "../../src/ws-api";
 import {
   generateHeaders,
   loadPrivateKey,
-} from "../../src/kalshi-client/auth";
-import { KalshiClient } from "../../src/kalshi-client/index";
+  loadPrivateKeyFromContent,
+} from "../../src/auth";
+import { KalshiClient } from "../../src/index";
 import { getClient } from "./client";
 import type {
   WebSocketAuthHeaders,
   WebSocketMessage,
   SubscribedMessage,
   UnsubscribedMessage,
-} from "../../src/kalshi-client/types/websocket";
+  OrderbookDeltaMessage,
+} from "../../src/types/websocket";
 
 const DEMO_WS_URL = "wss://demo-api.kalshi.co/trade-api/ws/v2";
 
@@ -127,16 +129,19 @@ function collectMessages<T extends WebSocketMessage>(
 
 beforeAll(async () => {
   const keyId = process.env.KALSHI_DEV_KEY_ID;
+  const keyString = process.env.KALSHI_DEV_KEY;
   const keyFile = process.env.KALSHI_DEV_KEY_FILE;
 
-  if (!keyId || !keyFile) {
+  if (!keyId || (!keyString && !keyFile)) {
     throw new Error(
-      "E2E WebSocket tests require KALSHI_DEV_KEY_ID and KALSHI_DEV_KEY_FILE in .env"
+      "E2E WebSocket tests require KALSHI_DEV_KEY_ID and either KALSHI_DEV_KEY or KALSHI_DEV_KEY_FILE in .env"
     );
   }
 
   apiKey = keyId;
-  privateKeyPem = loadPrivateKey(keyFile);
+  privateKeyPem = keyString
+    ? loadPrivateKeyFromContent(keyString)
+    : loadPrivateKey(keyFile!);
   restClient = getClient();
 
   // Fetch active market tickers for subscription tests
@@ -403,5 +408,224 @@ describe("WebSocket update_subscription", () => {
 
     // Clean up
     client.unsubscribe([sid]);
+  });
+});
+
+// ==================== Additional Private Channel Subscriptions ====================
+
+describe("WebSocket private channel subscriptions", () => {
+  let client: NodeKalshiWebSocketClient;
+
+  beforeAll(async () => {
+    client = createClient();
+    await client.connect();
+  });
+
+  afterAll(() => {
+    client.disconnect();
+  });
+
+  it("subscribes to orderbook_delta (private) and receives confirmation", async () => {
+    const subscribedPromise = waitForMessage<SubscribedMessage>(
+      client,
+      "subscribed"
+    );
+
+    const cmdId = client.subscribe({
+      channels: ["orderbook_delta"],
+      market_tickers: [activeMarketTicker],
+    });
+
+    const msg = await subscribedPromise;
+
+    expect(msg.type).toBe("subscribed");
+    expect(msg.id).toBe(cmdId);
+    expect(msg.msg.channel).toBe("orderbook_delta");
+    expect(typeof msg.msg.sid).toBe("number");
+  });
+
+  it("subscribes to market_positions (private) and receives confirmation", async () => {
+    const subscribedPromise = waitForMessage<SubscribedMessage>(
+      client,
+      "subscribed"
+    );
+
+    const cmdId = client.subscribe({
+      channels: ["market_positions"],
+      market_tickers: [activeMarketTicker],
+    });
+
+    const msg = await subscribedPromise;
+
+    expect(msg.type).toBe("subscribed");
+    expect(msg.id).toBe(cmdId);
+    expect(msg.msg.channel).toBe("market_positions");
+  });
+
+  it("subscribes to order_group_updates (private) and receives confirmation", async () => {
+    const subscribedPromise = waitForMessage<SubscribedMessage>(
+      client,
+      "subscribed"
+    );
+
+    const cmdId = client.subscribe({
+      channels: ["order_group_updates"],
+    });
+
+    const msg = await subscribedPromise;
+
+    expect(msg.type).toBe("subscribed");
+    expect(msg.id).toBe(cmdId);
+    expect(msg.msg.channel).toBe("order_group_updates");
+  });
+});
+
+// ==================== Order-Driven WebSocket Events ====================
+
+describe("WebSocket order-driven orderbook events", () => {
+  let wsClient: NodeKalshiWebSocketClient;
+  let orderMarketTicker: string;
+  let orderId: string;
+
+  beforeAll(async () => {
+    // Reuse the same market ticker established in the outer beforeAll
+    orderMarketTicker = activeMarketTicker;
+
+    wsClient = createClient();
+    await wsClient.connect();
+
+    // Subscribe to orderbook_delta for our market before placing orders
+    const subscribedPromise = waitForMessage<SubscribedMessage>(
+      wsClient,
+      "subscribed"
+    );
+    wsClient.subscribe({
+      channels: ["orderbook_delta"],
+      market_tickers: [orderMarketTicker],
+    });
+    await subscribedPromise;
+  });
+
+  afterAll(async () => {
+    if (orderId) {
+      try {
+        await restClient.deletePortfolioOrder(orderId);
+      } catch {
+        // Already cancelled — fine
+      }
+    }
+    wsClient.disconnect();
+  });
+
+  it("placing a limit order emits an orderbook_delta event with positive delta", async () => {
+    // Arm the listener before placing the order to avoid race conditions
+    const deltaPromise = new Promise<OrderbookDeltaMessage>((resolve, reject) => {
+      const timer = setTimeout(() => {
+        wsClient.off("orderbook_delta", handler);
+        reject(
+          new Error(
+            "Timed out waiting for orderbook_delta after placing order (15s)"
+          )
+        );
+      }, 15000);
+
+      const handler = (msg: OrderbookDeltaMessage) => {
+        if (msg.msg.market_ticker === orderMarketTicker && msg.msg.delta > 0) {
+          clearTimeout(timer);
+          wsClient.off("orderbook_delta", handler);
+          resolve(msg);
+        }
+      };
+      wsClient.on("orderbook_delta", handler);
+    });
+
+    // Place a passive limit buy at $0.01 — far from the market, won't fill
+    const result = await restClient.createPortfolioOrder({
+      ticker: orderMarketTicker,
+      side: "yes",
+      action: "buy",
+      count: 1,
+      type: "limit",
+      yes_price_dollars: "0.01",
+    });
+    orderId = result.order.order_id;
+
+    const delta = await deltaPromise;
+
+    expect(delta.type).toBe("orderbook_delta");
+    expect(delta.msg.market_ticker).toBe(orderMarketTicker);
+    expect(typeof delta.msg.price).toBe("number");
+    expect(typeof delta.msg.price_dollars).toBe("string");
+    expect(delta.msg.delta).toBeGreaterThan(0);
+    expect(["yes", "no"]).toContain(delta.msg.side);
+  });
+
+  it("cancelling the order emits an orderbook_delta event with negative delta", async () => {
+    expect(orderId).toBeDefined();
+
+    const deltaPromise = new Promise<OrderbookDeltaMessage>((resolve, reject) => {
+      const timer = setTimeout(() => {
+        wsClient.off("orderbook_delta", handler);
+        reject(
+          new Error(
+            "Timed out waiting for orderbook_delta after cancelling order (15s)"
+          )
+        );
+      }, 15000);
+
+      const handler = (msg: OrderbookDeltaMessage) => {
+        if (msg.msg.market_ticker === orderMarketTicker && msg.msg.delta < 0) {
+          clearTimeout(timer);
+          wsClient.off("orderbook_delta", handler);
+          resolve(msg);
+        }
+      };
+      wsClient.on("orderbook_delta", handler);
+    });
+
+    await restClient.deletePortfolioOrder(orderId);
+    orderId = ""; // consumed
+
+    const delta = await deltaPromise;
+
+    expect(delta.type).toBe("orderbook_delta");
+    expect(delta.msg.market_ticker).toBe(orderMarketTicker);
+    expect(delta.msg.delta).toBeLessThan(0);
+  });
+
+  it("subscribing to fill channel and placing an unfilled order emits no fill events (passive order)", async () => {
+    // Subscribe to fill channel
+    const subPromise = waitForMessage<SubscribedMessage>(wsClient, "subscribed");
+    wsClient.subscribe({
+      channels: ["fill"],
+      market_tickers: [orderMarketTicker],
+    });
+    const subMsg = await subPromise;
+    expect(subMsg.msg.channel).toBe("fill");
+
+    // Place a deeply passive order (at $0.01, far from market) and cancel it immediately.
+    // No fill event should arrive since the order can't match at this price.
+    const fillReceived = new Promise<boolean>((resolve) => {
+      const timer = setTimeout(() => resolve(false), 3000);
+      wsClient.once("fill", () => {
+        clearTimeout(timer);
+        resolve(true);
+      });
+    });
+
+    const result = await restClient.createPortfolioOrder({
+      ticker: orderMarketTicker,
+      side: "yes",
+      action: "buy",
+      count: 1,
+      type: "limit",
+      yes_price_dollars: "0.01",
+    });
+    const tempOrderId = result.order.order_id;
+
+    await restClient.deletePortfolioOrder(tempOrderId);
+
+    const gotFill = await fillReceived;
+    expect(gotFill).toBe(false);
   });
 });

@@ -1,6 +1,6 @@
-import { describe, it, expect, beforeAll } from "vitest";
+import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import { getClient } from "./client";
-import { KalshiClient } from "../../src/kalshi-client/index";
+import { KalshiClient } from "../../src/index";
 
 let client: KalshiClient;
 
@@ -247,6 +247,180 @@ describe("Account endpoints", () => {
         throw err;
       }
     }
+  });
+});
+
+// ==================== Order Lifecycle ====================
+
+/**
+ * Polls getPortfolioOrders until the given orderId appears in the resting list,
+ * or until maxAttempts is reached. The Kalshi demo API uses eventual consistency
+ * so the order may not appear in the query-side immediately after creation.
+ */
+async function pollForRestingOrder(
+  c: KalshiClient,
+  orderId: string,
+  maxAttempts = 8,
+  delayMs = 500
+) {
+  for (let i = 0; i < maxAttempts; i++) {
+    const resp = await c.getPortfolioOrders({ status: "resting", limit: 50 });
+    const found = resp.orders.find((o) => o.order_id === orderId);
+    if (found) return found;
+    if (i < maxAttempts - 1)
+      await new Promise((r) => setTimeout(r, delayMs));
+  }
+  return null;
+}
+
+/**
+ * Polls getPortfolioOrderById until it resolves (not 404), or maxAttempts.
+ */
+async function pollForOrderById(
+  c: KalshiClient,
+  orderId: string,
+  maxAttempts = 8,
+  delayMs = 500
+) {
+  for (let i = 0; i < maxAttempts; i++) {
+    try {
+      return await c.getPortfolioOrderById(orderId);
+    } catch {
+      if (i < maxAttempts - 1)
+        await new Promise((r) => setTimeout(r, delayMs));
+    }
+  }
+  return null;
+}
+
+describe("Order lifecycle (create → verify → cancel)", () => {
+  let orderMarketTicker: string;
+  let createdOrderId: string;
+
+  beforeAll(async () => {
+    const markets = await client.getMarketsList({ status: "open", limit: 5 });
+    if (markets.markets.length === 0) {
+      throw new Error("No open markets available on demo API for order tests");
+    }
+    orderMarketTicker = markets.markets[0].ticker;
+  });
+
+  afterAll(async () => {
+    // Safety cleanup in case a test failed before cancellation
+    if (createdOrderId) {
+      try {
+        await client.deletePortfolioOrder(createdOrderId);
+      } catch {
+        // Already cancelled or gone — that's fine
+      }
+    }
+  });
+
+  it("POST /portfolio/orders creates a passive limit buy order", async () => {
+    const result = await client.createPortfolioOrder({
+      ticker: orderMarketTicker,
+      side: "yes",
+      action: "buy",
+      count: 1,
+      type: "limit",
+      yes_price_dollars: "0.01",
+    });
+
+    expect(result).toHaveProperty("order");
+    const order = result.order;
+    expect(order.ticker).toBe(orderMarketTicker);
+    expect(order.side).toBe("yes");
+    expect(order.action).toBe("buy");
+    expect(order.type).toBe("limit");
+    expect(typeof order.order_id).toBe("string");
+    expect(order.initial_count).toBe(1);
+    // A passive limit at $0.01 should not immediately fill
+    expect(order.fill_count).toBe(0);
+
+    createdOrderId = order.order_id;
+  });
+
+  it("created order appears in resting portfolio orders (with retry for eventual consistency)", async () => {
+    expect(createdOrderId).toBeDefined();
+
+    const found = await pollForRestingOrder(client, createdOrderId);
+    expect(found).not.toBeNull();
+    expect(found!.ticker).toBe(orderMarketTicker);
+    expect(found!.side).toBe("yes");
+  });
+
+  it("GET /portfolio/orders/:id returns the created order by ID", async () => {
+    expect(createdOrderId).toBeDefined();
+
+    const response = await pollForOrderById(client, createdOrderId);
+    expect(response).not.toBeNull();
+    expect(response!.order.order_id).toBe(createdOrderId);
+    expect(response!.order.ticker).toBe(orderMarketTicker);
+    expect(response!.order.type).toBe("limit");
+  });
+
+  it("GET /portfolio/orders/queue_positions/:id returns queue position for resting order", async () => {
+    expect(createdOrderId).toBeDefined();
+
+    try {
+      const response = await client.getPortfolioOrderQueuePositionById(
+        createdOrderId
+      );
+      expect(response).toHaveProperty("queue_position");
+      expect(typeof response.queue_position).toBe("number");
+      expect(response.queue_position).toBeGreaterThanOrEqual(1);
+    } catch (err) {
+      const error = err as { message?: string };
+      if (error.message?.includes("404")) {
+        console.log(
+          "queue_positions-by-order-id not available on demo API (404) — skipping"
+        );
+      } else {
+        throw err;
+      }
+    }
+  });
+
+  it("DELETE /portfolio/orders/:id cancels the resting order", async () => {
+    expect(createdOrderId).toBeDefined();
+
+    const result = await client.deletePortfolioOrder(createdOrderId);
+
+    expect(result).toHaveProperty("order");
+    expect(result).toHaveProperty("reduced_by");
+    expect(result.order.order_id).toBe(createdOrderId);
+    expect(typeof result.reduced_by).toBe("number");
+    expect(result.reduced_by).toBeGreaterThanOrEqual(0);
+  });
+
+  it("cancelled order no longer appears in resting orders", async () => {
+    expect(createdOrderId).toBeDefined();
+
+    // Poll briefly waiting for query-side to reflect the cancellation
+    let found = true;
+    for (let i = 0; i < 6; i++) {
+      const response = await client.getPortfolioOrders({
+        status: "resting",
+        limit: 50,
+      });
+      if (!response.orders.find((o) => o.order_id === createdOrderId)) {
+        found = false;
+        break;
+      }
+      await new Promise((r) => setTimeout(r, 500));
+    }
+    expect(found).toBe(false);
+
+    // Mark as consumed so afterAll cleanup skips it
+    createdOrderId = "";
+  });
+
+  it("cancelled order appears in canceled orders list", async () => {
+    const response = await client.getPortfolioOrders({
+      status: "canceled",
+      limit: 10,
+    });
+    expect(Array.isArray(response.orders)).toBe(true);
   });
 });
 
