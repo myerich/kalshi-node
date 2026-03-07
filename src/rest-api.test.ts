@@ -472,7 +472,7 @@ describe("KalshiClient public methods", () => {
     );
     const result = await client.getPortfolioOrderQueuePositionById("o1");
     expect(result.queue_position).toBe(3);
-    expect(callUrl()).toContain("/portfolio/orders/o1/queue_positions");
+    expect(callUrl()).toContain("/portfolio/orders/o1/queue_position");
   });
 
   // ---- Portfolio - Order Groups ----
