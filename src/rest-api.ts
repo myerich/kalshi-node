@@ -1,5 +1,6 @@
 import * as crypto from "crypto";
 import { generateHeaders, loadPrivateKey, loadPrivateKeyFromContent } from "./auth";
+import { makeKalshiError } from "./errors";
 import type {
   ExchangeStatus,
   ExchangeAnnouncementsResponse,
@@ -91,6 +92,32 @@ import type {
   BatchCancelOrdersResponse,
   CreateSubaccountResponse,
   TransferBetweenSubaccountsData,
+  GetSubaccountNettingResponse,
+  UpdateSubaccountNettingRequest,
+  GetHistoricalCutoffResponse,
+  GetHistoricalMarketsParams,
+  GetHistoricalCandlesticksParams,
+  GetHistoricalOrdersParams,
+  GetHistoricalFillsParams,
+  GetApiKeysResponse,
+  CreateApiKeyRequest,
+  CreateApiKeyResponse,
+  GenerateApiKeyRequest,
+  GenerateApiKeyResponse,
+  GetFCMOrdersParams,
+  GetFCMPositionsParams,
+  GetCommunicationsIDResponse,
+  GetRFQsParams,
+  GetRFQsResponse,
+  GetRFQResponse,
+  CreateRFQRequest,
+  CreateRFQResponse,
+  GetQuotesParams,
+  GetQuotesResponse,
+  GetQuoteResponse,
+  CreateQuoteRequest,
+  CreateQuoteResponse,
+  AcceptQuoteRequest,
 } from "./types";
 
 export interface KalshiClientConfig {
@@ -187,14 +214,13 @@ export class KalshiClient {
           retries: retries - 1,
         });
       }
-      throw new Error(`Rate limit exceeded on ${endpoint} after max retries`);
+      const body = await response.text();
+      throw makeKalshiError(429, method, endpoint, body, retryAfter);
     }
 
     if (!response.ok) {
       const body = await response.text();
-      throw new Error(
-        `API request failed: ${method} ${endpoint} - ${response.status} ${response.statusText}: ${body}`
-      );
+      throw makeKalshiError(response.status, method, endpoint, body);
     }
 
     return (await response.json()) as T;
@@ -509,7 +535,7 @@ export class KalshiClient {
   ): Promise<QueuePositionByIdResponse> {
     return this.request<QueuePositionByIdResponse>(
       "GET",
-      `/portfolio/orders/${orderId}/queue_positions`,
+      `/portfolio/orders/${orderId}/queue_position`,
       { auth: true }
     );
   }
@@ -720,6 +746,217 @@ export class KalshiClient {
       "POST",
       "/portfolio/subaccounts/transfer",
       { data, auth: true }
+    );
+  }
+
+  // ==================== Subaccount Netting ====================
+
+  async getSubaccountNetting(): Promise<GetSubaccountNettingResponse> {
+    return this.request<GetSubaccountNettingResponse>(
+      "GET",
+      "/portfolio/subaccounts/netting",
+      { auth: true }
+    );
+  }
+
+  async updateSubaccountNetting(
+    data: UpdateSubaccountNettingRequest
+  ): Promise<GetSubaccountNettingResponse> {
+    return this.request<GetSubaccountNettingResponse>(
+      "PUT",
+      "/portfolio/subaccounts/netting",
+      { data, auth: true }
+    );
+  }
+
+  // ==================== API Keys ====================
+
+  async getApiKeys(): Promise<GetApiKeysResponse> {
+    return this.request<GetApiKeysResponse>("GET", "/api_keys", { auth: true });
+  }
+
+  async createApiKey(data: CreateApiKeyRequest): Promise<CreateApiKeyResponse> {
+    return this.request<CreateApiKeyResponse>("POST", "/api_keys", {
+      data,
+      auth: true,
+    });
+  }
+
+  async generateApiKey(
+    data: GenerateApiKeyRequest
+  ): Promise<GenerateApiKeyResponse> {
+    return this.request<GenerateApiKeyResponse>("POST", "/api_keys/generate", {
+      data,
+      auth: true,
+    });
+  }
+
+  async deleteApiKey(apiKey: string): Promise<void> {
+    await this.request<Record<string, never>>("DELETE", `/api_keys/${apiKey}`, {
+      auth: true,
+    });
+  }
+
+  // ==================== Historical ====================
+
+  async getHistoricalCutoff(): Promise<GetHistoricalCutoffResponse> {
+    return this.request<GetHistoricalCutoffResponse>(
+      "GET",
+      "/historical/cutoff"
+    );
+  }
+
+  async getHistoricalMarkets(
+    params?: GetHistoricalMarketsParams
+  ): Promise<MarketsListResponse> {
+    return this.request<MarketsListResponse>("GET", "/historical/markets", {
+      params,
+    });
+  }
+
+  async getHistoricalMarket(ticker: string): Promise<MarketResponse> {
+    return this.request<MarketResponse>(
+      "GET",
+      `/historical/markets/${ticker}`
+    );
+  }
+
+  async getHistoricalMarketCandlesticks(
+    ticker: string,
+    params: GetHistoricalCandlesticksParams
+  ): Promise<MarketCandlesticksResponse> {
+    return this.request<MarketCandlesticksResponse>(
+      "GET",
+      `/historical/markets/${ticker}/candlesticks`,
+      { params }
+    );
+  }
+
+  async getHistoricalFills(
+    params?: GetHistoricalFillsParams
+  ): Promise<PortfolioFillsResponse> {
+    return this.request<PortfolioFillsResponse>("GET", "/historical/fills", {
+      params,
+      auth: true,
+    });
+  }
+
+  async getHistoricalOrders(
+    params?: GetHistoricalOrdersParams
+  ): Promise<PortfolioOrdersResponse> {
+    return this.request<PortfolioOrdersResponse>("GET", "/historical/orders", {
+      params,
+      auth: true,
+    });
+  }
+
+  // ==================== FCM ====================
+
+  async getFCMOrders(
+    params: GetFCMOrdersParams
+  ): Promise<PortfolioOrdersResponse> {
+    return this.request<PortfolioOrdersResponse>("GET", "/fcm/orders", {
+      params,
+      auth: true,
+    });
+  }
+
+  async getFCMPositions(
+    params: GetFCMPositionsParams
+  ): Promise<PortfolioPositionsResponse> {
+    return this.request<PortfolioPositionsResponse>("GET", "/fcm/positions", {
+      params,
+      auth: true,
+    });
+  }
+
+  // ==================== Communications ====================
+
+  async getCommunicationsID(): Promise<GetCommunicationsIDResponse> {
+    return this.request<GetCommunicationsIDResponse>(
+      "GET",
+      "/communications/id",
+      { auth: true }
+    );
+  }
+
+  async getRFQs(params?: GetRFQsParams): Promise<GetRFQsResponse> {
+    return this.request<GetRFQsResponse>("GET", "/communications/rfqs", {
+      params,
+      auth: true,
+    });
+  }
+
+  async createRFQ(data: CreateRFQRequest): Promise<CreateRFQResponse> {
+    return this.request<CreateRFQResponse>("POST", "/communications/rfqs", {
+      data,
+      auth: true,
+    });
+  }
+
+  async getRFQ(rfqId: string): Promise<GetRFQResponse> {
+    return this.request<GetRFQResponse>(
+      "GET",
+      `/communications/rfqs/${rfqId}`,
+      { auth: true }
+    );
+  }
+
+  async deleteRFQ(rfqId: string): Promise<void> {
+    await this.request<Record<string, never>>(
+      "DELETE",
+      `/communications/rfqs/${rfqId}`,
+      { auth: true }
+    );
+  }
+
+  async getQuotes(params?: GetQuotesParams): Promise<GetQuotesResponse> {
+    return this.request<GetQuotesResponse>("GET", "/communications/quotes", {
+      params,
+      auth: true,
+    });
+  }
+
+  async createQuote(data: CreateQuoteRequest): Promise<CreateQuoteResponse> {
+    return this.request<CreateQuoteResponse>(
+      "POST",
+      "/communications/quotes",
+      { data, auth: true }
+    );
+  }
+
+  async getQuote(quoteId: string): Promise<GetQuoteResponse> {
+    return this.request<GetQuoteResponse>(
+      "GET",
+      `/communications/quotes/${quoteId}`,
+      { auth: true }
+    );
+  }
+
+  async deleteQuote(quoteId: string): Promise<void> {
+    await this.request<Record<string, never>>(
+      "DELETE",
+      `/communications/quotes/${quoteId}`,
+      { auth: true }
+    );
+  }
+
+  async acceptQuote(
+    quoteId: string,
+    data: AcceptQuoteRequest
+  ): Promise<void> {
+    await this.request<Record<string, never>>(
+      "PUT",
+      `/communications/quotes/${quoteId}/accept`,
+      { data, auth: true }
+    );
+  }
+
+  async confirmQuote(quoteId: string): Promise<void> {
+    await this.request<Record<string, never>>(
+      "PUT",
+      `/communications/quotes/${quoteId}/confirm`,
+      { auth: true }
     );
   }
 }

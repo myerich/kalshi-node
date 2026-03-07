@@ -32,9 +32,9 @@
     "test:watch": "vitest",
     "test:e2e": "vitest run --config vitest.e2e.config.ts",
     "prepare": "npm run build",
-    "test:test-panel": "concurrently \"npm run test:test-panel:server\" \"npm run test:test-panel:ui\"",
-    "test:test-panel:server": "tsx tests/test-panel/server.ts",
-    "test:test-panel:ui": "vite --config tests/test-panel/vite.config.ts"
+    "test:panel": "concurrently \"npm run test:panel:server\" \"npm run test:panel:ui\"",
+    "test:panel:server": "tsx tests/test-panel/server.ts",
+    "test:panel:ui": "vite --config tests/test-panel/vite.config.ts"
   },
   "repository": {
     "type": "git",

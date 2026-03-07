@@ -20,7 +20,7 @@ interface ConsoleEntry {
 
 let ws: WebSocket | null = null;
 let connectionState: "disconnected" | "connecting" | "connected" = "disconnected";
-let authMode: "dev" | "prod" = "dev";
+let authMode: "dev" | "prod" = "prod";
 let commandId = 1;
 let subscriptions: ActiveSubscription[] = [];
 let consoleEntries: ConsoleEntry[] = [];

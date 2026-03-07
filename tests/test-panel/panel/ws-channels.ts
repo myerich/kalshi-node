@@ -6,7 +6,7 @@ export interface ChannelDef {
   description: string;
 }
 
-/** Market data channels — public data, but auth still required for the WS connection. */
+/** Market data channels — same data for all subscribers (auth still required for the connection). */
 export const MARKET_CHANNELS: ChannelDef[] = [
   {
     name: "ticker",
@@ -20,8 +20,8 @@ export const MARKET_CHANNELS: ChannelDef[] = [
   },
   {
     name: "orderbook_delta",
-    label: "Orderbook",
-    description: "Snapshot first, then incremental deltas",
+    label: "Orderbook Delta",
+    description: "Orderbook snapshot then incremental deltas (sends snapshot first, then delta updates)",
   },
   {
     name: "trade",
@@ -40,10 +40,10 @@ export const MARKET_CHANNELS: ChannelDef[] = [
   },
 ];
 
-/** User-specific channels — requires auth, returns data for the authenticated user. */
+/** User-specific channels — returns data for the authenticated user. */
 export const USER_CHANNELS: ChannelDef[] = [
   {
-    name: "user_order",
+    name: "user_orders",
     label: "User Orders",
     description: "Your order lifecycle events",
   },

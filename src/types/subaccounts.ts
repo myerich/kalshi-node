@@ -40,3 +40,19 @@ export interface TransferBetweenSubaccountsData {
   to_subaccount: number;
   amount_cents: number;
 }
+
+// ==================== Subaccount Netting Types ====================
+
+export interface SubaccountNettingEntry {
+  subaccount_number: number;
+  netting_enabled: boolean;
+}
+
+export interface GetSubaccountNettingResponse {
+  netting: SubaccountNettingEntry[];
+}
+
+export interface UpdateSubaccountNettingRequest {
+  subaccount_number: number;
+  netting_enabled: boolean;
+}

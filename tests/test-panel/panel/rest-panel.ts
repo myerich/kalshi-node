@@ -5,7 +5,7 @@ import { ENDPOINTS, type EndpointDef, type ParamDef } from "./endpoints";
 // ---- State ----
 
 let selectedEndpoint: EndpointDef = ENDPOINTS[0];
-let authMode: "none" | "dev" | "prod" = "none";
+let authMode: "none" | "dev" | "prod" = "prod";
 let loading = false;
 let responseStatus = 0;
 let responseBody = "";
@@ -80,9 +80,9 @@ function buildShell(): string {
       <div class="field">
         <label>Auth Mode</label>
         <div class="auth-toggle">
-          <button data-mode="none" class="active">No Auth</button>
+          <button data-mode="none">No Auth</button>
           <button data-mode="dev">Dev</button>
-          <button data-mode="prod">Prod</button>
+          <button data-mode="prod" class="active">Prod</button>
         </div>
       </div>
     </div>

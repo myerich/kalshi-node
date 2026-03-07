@@ -4,3 +4,4 @@ export { KalshiWebSocketClient } from "./ws-api";
 export { generateHeaders, loadPrivateKey, loadPrivateKeyFromContent } from "./auth";
 export type { AuthConfig } from "./auth";
 export * from "./types";
+export * from "./errors";

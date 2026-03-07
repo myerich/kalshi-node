@@ -240,7 +240,7 @@ describe("WebSocket subscribe", () => {
     );
 
     const cmdId = client.subscribe({
-      channels: ["trade", "ticker_v2"],
+      channels: ["trade", "market_lifecycle_v2"],
       market_tickers: [activeMarketTicker],
     });
 
@@ -389,6 +389,7 @@ describe("WebSocket update_subscription", () => {
 
     const updateCmdId = client.updateSubscription({
       sids: [sid],
+      action: "add_markets",
       market_tickers: [activeMarketTicker, secondMarketTicker],
     });
 

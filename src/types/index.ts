@@ -6,3 +6,7 @@ export * from "./portfolio";
 export * from "./subaccounts";
 export * from "./mutations";
 export * from "./websocket";
+export * from "./historical";
+export * from "./api-keys";
+export * from "./fcm";
+export * from "./communications";

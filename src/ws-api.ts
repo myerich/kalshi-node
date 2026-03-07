@@ -4,11 +4,11 @@
  * Real-time data streaming via WebSocket connections to Kalshi.
  * Uses the native WebSocket API (works in browsers and Node.js 22+).
  *
- * Public channels (no auth required): ticker, ticker_v2, trade,
+ * Public channels (no auth required): ticker, trade,
  * market_lifecycle_v2, multivariate
  *
  * Private channels (auth required): orderbook_delta, orderbook_snapshot,
- * fill, market_positions, communications, order_group_updates
+ * fill, market_positions, communications, order_group_updates, user_orders
  *
  * Note: Browser WebSocket API does not support custom HTTP headers on the
  * upgrade request. Authenticated connections work in Node.js environments
@@ -242,6 +242,22 @@ export class KalshiWebSocketClient {
   /** Get all currently active subscriptions. */
   getActiveSubscriptions(): ActiveSubscription[] {
     return Array.from(this.subscriptions.values());
+  }
+
+  /**
+   * Request a list of active server-side subscriptions.
+   * Listen for 'ok' events to receive the response.
+   * Returns the command ID.
+   */
+  listSubscriptions(): number {
+    const id = this.nextCommandId();
+    const cmd: WebSocketCommand = {
+      id,
+      cmd: "list_subscriptions",
+      params: {},
+    };
+    this.send(cmd);
+    return id;
   }
 
   // ==================== Event Emitter ====================

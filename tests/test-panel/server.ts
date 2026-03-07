@@ -12,7 +12,7 @@ import { createServer, type IncomingMessage, type ServerResponse } from "node:ht
 import { WebSocketServer, WebSocket as WsWebSocket } from "ws";
 import { config } from "dotenv";
 import { resolve } from "node:path";
-import { generateHeaders, loadPrivateKey } from "../../src/auth";
+import { generateHeaders, loadPrivateKey, loadPrivateKeyFromContent } from "../../src/auth";
 
 // Load .env from project root
 config({ path: resolve(import.meta.dirname, "../../.env") });
@@ -38,11 +38,17 @@ function getCredentials(authMode: string): Credentials | null {
     authMode === "dev"
       ? process.env.KALSHI_DEV_KEY_FILE
       : process.env.KALSHI_PROD_KEY_FILE;
+  const keyContent =
+    authMode === "dev"
+      ? process.env.KALSHI_DEV_KEY
+      : process.env.KALSHI_PROD_KEY;
 
-  if (!keyId || !keyFile) return null;
+  if (!keyId || (!keyFile && !keyContent)) return null;
 
   try {
-    const privateKey = loadPrivateKey(keyFile);
+    const privateKey = keyFile
+      ? loadPrivateKey(keyFile)
+      : loadPrivateKeyFromContent(keyContent!);
     return { apiKey: keyId, privateKey };
   } catch (err) {
     console.error(`Failed to load key for ${authMode}:`, err);
@@ -66,7 +72,7 @@ async function handleRestProxy(req: IncomingMessage, res: ServerResponse): Promi
     authMode?: string;
   };
 
-  const baseUrl = authMode === "prod" ? KALSHI_PROD_BASE : KALSHI_DEV_BASE;
+  const baseUrl = authMode === "dev" ? KALSHI_DEV_BASE : KALSHI_PROD_BASE;
   const url = new URL(`${baseUrl}${endpoint}`);
 
   if (params) {
@@ -149,23 +155,23 @@ wss.on("connection", (browserWs, req) => {
   const url = new URL(req.url || "/", `http://${req.headers.host}`);
   const authMode = url.searchParams.get("authMode") || "dev";
 
-  const creds = getCredentials(authMode);
-  if (!creds) {
-    browserWs.close(1008, `Missing ${authMode} credentials`);
-    return;
-  }
+  const wsUrl = authMode === "dev" ? KALSHI_DEV_WS : KALSHI_PROD_WS;
 
-  const wsUrl = authMode === "prod" ? KALSHI_PROD_WS : KALSHI_DEV_WS;
-  const authHeaders = generateHeaders(
-    creds.apiKey,
-    creds.privateKey,
-    "GET",
-    "/trade-api/ws/v2"
-  );
+  let authHeaders: Record<string, string> | undefined;
+  if (authMode !== "none") {
+    const creds = getCredentials(authMode);
+    if (!creds) {
+      browserWs.close(1008, `Missing ${authMode} credentials`);
+      return;
+    }
+    authHeaders = generateHeaders(creds.apiKey, creds.privateKey, "GET", "/trade-api/ws/v2");
+  }
 
   console.log(`[WS Proxy] Connecting to ${wsUrl} (${authMode} mode)`);
 
-  const upstream = new WsWebSocket(wsUrl, { headers: authHeaders });
+  const upstream = authHeaders
+    ? new WsWebSocket(wsUrl, { headers: authHeaders })
+    : new WsWebSocket(wsUrl);
 
   upstream.on("open", () => {
     console.log("[WS Proxy] Upstream connected");
@@ -210,5 +216,5 @@ wss.on("connection", (browserWs, req) => {
 server.listen(PORT, () => {
   console.log(`[Test Panel Server] Proxy running on http://localhost:${PORT}`);
   console.log(`[Test Panel Server] Open http://localhost:5173 in your browser`);
-  console.log(`[Test Panel Server] (Start Vite dev server with: npm run test:test-panel:ui)`);
+  console.log(`[Test Panel Server] (Start Vite dev server with: npm run test:panel:ui)`);
 });

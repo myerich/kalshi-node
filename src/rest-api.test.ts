@@ -237,9 +237,7 @@ describe("KalshiClient request behavior", () => {
     fetchSpy.mockResolvedValue(
       mockResponse({ error: "not found" }, 404)
     );
-    await expect(client.getMarket("FAKE")).rejects.toThrow(
-      "API request failed"
-    );
+    await expect(client.getMarket("FAKE")).rejects.toThrow("404 GET");
   });
 
   it("retries on 429 with Retry-After header", async () => {
