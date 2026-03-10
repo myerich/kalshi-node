@@ -43,16 +43,16 @@ export interface TransferBetweenSubaccountsData {
 
 // ==================== Subaccount Netting Types ====================
 
-export interface SubaccountNettingEntry {
+export interface SubaccountNettingConfig {
   subaccount_number: number;
-  netting_enabled: boolean;
+  enabled: boolean;
 }
 
 export interface GetSubaccountNettingResponse {
-  netting: SubaccountNettingEntry[];
+  netting_configs: SubaccountNettingConfig[];
 }
 
 export interface UpdateSubaccountNettingRequest {
   subaccount_number: number;
-  netting_enabled: boolean;
+  enabled: boolean;
 }

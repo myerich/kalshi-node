@@ -40,6 +40,7 @@ export interface SeriesListParams {
   tags?: string;
   include_product_metadata?: boolean;
   include_volume?: boolean;
+  min_updated_ts?: number;
 }
 
 export interface SeriesParams {

@@ -1,11 +1,9 @@
 // ==================== API Key Types ====================
 
 export interface ApiKey {
-  key_id: string;
+  api_key_id: string;
   name: string;
-  created_at: string;
-  last_used_at?: string;
-  public_key?: string;
+  scopes: string[];
 }
 
 export interface GetApiKeysResponse {
@@ -15,17 +13,19 @@ export interface GetApiKeysResponse {
 export interface CreateApiKeyRequest {
   name: string;
   public_key: string;
+  scopes?: string[];
 }
 
 export interface CreateApiKeyResponse {
-  api_key: ApiKey;
+  api_key_id: string;
 }
 
 export interface GenerateApiKeyRequest {
   name: string;
+  scopes?: string[];
 }
 
 export interface GenerateApiKeyResponse {
-  api_key: ApiKey;
+  api_key_id: string;
   private_key: string;
 }

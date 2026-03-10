@@ -21,6 +21,56 @@ interface ConsoleEntry {
 let ws: WebSocket | null = null;
 let connectionState: "disconnected" | "connecting" | "connected" = "disconnected";
 let authMode: "dev" | "prod" = "prod";
+
+// ---- Persistence (localStorage) ----
+
+const LS_WS_AUTH = "kalshi_ws_auth";
+const LS_WS_COMMAND = "kalshi_ws_command";
+const LS_WS_FIELDS = "kalshi_ws_fields";
+
+type WsFieldStore = Record<string, Record<string, string>>;
+
+function loadWsState(): void {
+  const saved = localStorage.getItem(LS_WS_AUTH) as "dev" | "prod" | null;
+  if (saved === "dev" || saved === "prod") authMode = saved;
+}
+
+function saveWsFields(): void {
+  const cmd = commandSelect.value;
+  const store: WsFieldStore = {};
+  try {
+    const existing = localStorage.getItem(LS_WS_FIELDS);
+    if (existing) Object.assign(store, JSON.parse(existing));
+  } catch { /* ignore */ }
+  const vals: Record<string, string> = {};
+  commandForm.querySelectorAll<HTMLInputElement | HTMLSelectElement>("input, select").forEach((el) => {
+    const key = el.id || (el as HTMLInputElement).dataset.channel;
+    if (!key) return;
+    vals[key] = el.type === "checkbox" ? String((el as HTMLInputElement).checked) : el.value;
+  });
+  store[cmd] = vals;
+  localStorage.setItem(LS_WS_FIELDS, JSON.stringify(store));
+}
+
+function restoreWsFields(): void {
+  const cmd = commandSelect.value;
+  let store: WsFieldStore = {};
+  try {
+    const raw = localStorage.getItem(LS_WS_FIELDS);
+    if (raw) store = JSON.parse(raw);
+  } catch { /* ignore */ }
+  const vals = store[cmd];
+  if (!vals) return;
+  commandForm.querySelectorAll<HTMLInputElement | HTMLSelectElement>("input, select").forEach((el) => {
+    const key = el.id || (el as HTMLInputElement).dataset.channel;
+    if (!key || !(key in vals)) return;
+    if (el.type === "checkbox") {
+      (el as HTMLInputElement).checked = vals[key] === "true";
+    } else {
+      el.value = vals[key];
+    }
+  });
+}
 let commandId = 1;
 let subscriptions: ActiveSubscription[] = [];
 let consoleEntries: ConsoleEntry[] = [];
@@ -45,6 +95,8 @@ let autoScrollCheckbox: HTMLInputElement;
 
 /** Mount the WebSocket panel into the given container element. */
 export function mountWsPanel(el: HTMLElement): void {
+  loadWsState();
+
   container = el;
   container.innerHTML = buildShell();
 
@@ -58,6 +110,10 @@ export function mountWsPanel(el: HTMLElement): void {
   consoleEl = qs("#ws-console");
   autoScrollCheckbox = qs("#ws-auto-scroll");
 
+  // Restore saved command selection
+  const savedCmd = localStorage.getItem(LS_WS_COMMAND);
+  if (savedCmd) commandSelect.value = savedCmd;
+
   // Auth mode toggle — auto-disconnect on change
   const authButtons = qsa<HTMLButtonElement>(".ws-auth-toggle button");
   authButtons.forEach((btn) => {
@@ -65,6 +121,7 @@ export function mountWsPanel(el: HTMLElement): void {
       const newMode = btn.dataset.mode as "dev" | "prod";
       if (newMode === authMode) return;
       authMode = newMode;
+      localStorage.setItem(LS_WS_AUTH, authMode);
       authButtons.forEach((b) => b.classList.toggle("active", b === btn));
 
       // Auto-disconnect and wipe subscriptions on auth mode change
@@ -81,7 +138,10 @@ export function mountWsPanel(el: HTMLElement): void {
   });
 
   connectBtn.addEventListener("click", toggleConnection);
-  commandSelect.addEventListener("change", renderCommandForm);
+  commandSelect.addEventListener("change", () => {
+    localStorage.setItem(LS_WS_COMMAND, commandSelect.value);
+    renderCommandForm();
+  });
   sendCommandBtn.addEventListener("click", sendCommand);
   autoScrollCheckbox.addEventListener("change", () => {
     autoScroll = autoScrollCheckbox.checked;
@@ -274,6 +334,11 @@ function renderCommandForm(): void {
       </div>
     `;
   }
+
+  // Restore saved values then watch for changes
+  restoreWsFields();
+  commandForm.addEventListener("input", saveWsFields);
+  commandForm.addEventListener("change", saveWsFields);
 }
 
 // ---- Connection ----

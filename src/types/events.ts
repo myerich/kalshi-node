@@ -29,6 +29,7 @@ export interface EventsListResponse {
 
 export interface EventResponse {
   event: Event;
+  markets?: Market[];
 }
 
 // ==================== Event Request Params ====================
@@ -39,6 +40,7 @@ export interface EventsListParams {
   with_nested_markets?: boolean;
   with_milestones?: boolean;
   min_close_ts?: number;
+  min_updated_ts?: number;
   limit?: number;
   cursor?: string;
 }
@@ -148,6 +150,7 @@ export interface MilestonesParams {
   source_id?: string;
   type?: string;
   related_event_ticker?: string;
+  min_updated_ts?: number;
   cursor?: string;
 }
 

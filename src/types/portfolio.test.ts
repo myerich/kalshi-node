@@ -536,7 +536,8 @@ describe("QueuePositionsParams", () => {
   it("accepts all fields populated", () => {
     const full: QueuePositionsParams = {
       market_tickers: "MKT-1,MKT-2",
-      event_tickers: "EVT-1",
+      event_ticker: "EVT-1",
+      subaccount: 0,
     };
     expect(full.market_tickers).toContain("MKT-1");
   });

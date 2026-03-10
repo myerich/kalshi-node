@@ -537,7 +537,8 @@ export const ENDPOINTS: EndpointDef[] = [
     category: "Portfolio",
     queryParams: [
       { name: "market_tickers", type: "string", required: false },
-      { name: "event_tickers", type: "string", required: false },
+      { name: "event_ticker", type: "string", required: false },
+      { name: "subaccount", type: "number", required: false },
     ],
   },
   {
@@ -872,7 +873,8 @@ export const ENDPOINTS: EndpointDef[] = [
     auth: true,
     category: "Subaccounts",
     bodyParams: [
-      { name: "subaccount_netting_enabled", type: "boolean", required: true },
+      { name: "subaccount_number", type: "number", required: true },
+      { name: "enabled", type: "boolean", required: true },
     ],
   },
 
@@ -1036,6 +1038,11 @@ export const ENDPOINTS: EndpointDef[] = [
     auth: true,
     category: "Communications",
     queryParams: [
+      { name: "event_ticker", type: "string", required: false },
+      { name: "market_ticker", type: "string", required: false },
+      { name: "subaccount", type: "number", required: false },
+      { name: "status", type: "string", required: false },
+      { name: "creator_user_id", type: "string", required: false },
       { name: "limit", type: "number", required: false },
       { name: "cursor", type: "string", required: false },
     ],
@@ -1075,6 +1082,12 @@ export const ENDPOINTS: EndpointDef[] = [
     auth: true,
     category: "Communications",
     queryParams: [
+      { name: "event_ticker", type: "string", required: false },
+      { name: "market_ticker", type: "string", required: false },
+      { name: "status", type: "string", required: false },
+      { name: "quote_creator_user_id", type: "string", required: false },
+      { name: "rfq_creator_user_id", type: "string", required: false },
+      { name: "rfq_creator_subtrader_id", type: "string", required: false },
       { name: "rfq_id", type: "string", required: false },
       { name: "limit", type: "number", required: false },
       { name: "cursor", type: "string", required: false },

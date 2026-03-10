@@ -9,6 +9,7 @@ export interface CreateOrderResponse {
 export interface DeleteOrderResponse {
   order: Order;
   reduced_by: number;
+  reduced_by_fp: string;
 }
 
 export interface AmendOrderResponse {
@@ -73,8 +74,16 @@ export interface BatchCancelOrdersRequestOrder {
   subaccount?: number;
 }
 
+export interface BatchCancelOrderIndividualResponse {
+  order_id: string;
+  order?: Order | null;
+  reduced_by: number;
+  reduced_by_fp: string;
+  error?: unknown;
+}
+
 export interface BatchCancelOrdersResponse {
-  orders: DeleteOrderResponse[];
+  orders: BatchCancelOrderIndividualResponse[];
 }
 
 export interface BatchCancelOrdersData {

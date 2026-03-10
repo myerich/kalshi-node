@@ -11,6 +11,51 @@ let responseStatus = 0;
 let responseBody = "";
 let responseTime = 0;
 
+// ---- Persistence (localStorage) ----
+
+const LS_ENDPOINT = "kalshi_rest_endpoint";
+const LS_AUTH = "kalshi_rest_auth";
+const lsParams = (idx: number) => `kalshi_rest_params_${idx}`;
+
+function loadState(): void {
+  const savedAuth = localStorage.getItem(LS_AUTH) as typeof authMode | null;
+  if (savedAuth === "none" || savedAuth === "dev" || savedAuth === "prod") {
+    authMode = savedAuth;
+  }
+  const savedIdx = parseInt(localStorage.getItem(LS_ENDPOINT) ?? "");
+  if (!isNaN(savedIdx) && savedIdx >= 0 && savedIdx < ENDPOINTS.length) {
+    selectedEndpoint = ENDPOINTS[savedIdx];
+  }
+}
+
+function saveParams(): void {
+  const idx = ENDPOINTS.indexOf(selectedEndpoint);
+  const vals: Record<string, string> = {};
+  paramsContainer
+    .querySelectorAll<HTMLInputElement | HTMLSelectElement>("[data-param]")
+    .forEach((el) => {
+      vals[el.dataset.param!] = el.value;
+    });
+  localStorage.setItem(lsParams(idx), JSON.stringify(vals));
+}
+
+function restoreParams(): void {
+  const idx = ENDPOINTS.indexOf(selectedEndpoint);
+  const raw = localStorage.getItem(lsParams(idx));
+  if (!raw) return;
+  try {
+    const vals = JSON.parse(raw) as Record<string, string>;
+    paramsContainer
+      .querySelectorAll<HTMLInputElement | HTMLSelectElement>("[data-param]")
+      .forEach((el) => {
+        const v = vals[el.dataset.param!];
+        if (v !== undefined) el.value = v;
+      });
+  } catch {
+    /* ignore corrupt data */
+  }
+}
+
 // ---- Cached DOM refs (set in mount) ----
 
 let endpointSelect: HTMLSelectElement;
@@ -24,6 +69,8 @@ let responseMeta: HTMLSpanElement;
 
 /** Mount the REST panel into the given container element. */
 export function mountRestPanel(container: HTMLElement): void {
+  loadState();
+
   container.innerHTML = buildShell();
 
   endpointSelect = qs<HTMLSelectElement>("#endpoint-select", container);
@@ -35,14 +82,24 @@ export function mountRestPanel(container: HTMLElement): void {
   responsePre = qs<HTMLPreElement>("#response-body", container);
   responseMeta = qs<HTMLSpanElement>("#response-meta", container);
 
+  // Restore endpoint select position
+  endpointSelect.value = String(ENDPOINTS.indexOf(selectedEndpoint));
+
+  // Restore active auth button
+  authButtons.forEach((b) =>
+    b.classList.toggle("active", b.dataset.mode === authMode)
+  );
+
   endpointSelect.addEventListener("change", () => {
     selectedEndpoint = ENDPOINTS[parseInt(endpointSelect.value)];
+    localStorage.setItem(LS_ENDPOINT, endpointSelect.value);
     renderForm();
   });
 
   authButtons.forEach((btn) => {
     btn.addEventListener("click", () => {
       authMode = btn.dataset.mode as typeof authMode;
+      localStorage.setItem(LS_AUTH, authMode);
       authButtons.forEach((b) => b.classList.toggle("active", b === btn));
     });
   });
@@ -147,6 +204,9 @@ function renderForm(): void {
       </div>`;
   } else {
     paramsContainer.innerHTML = sections.join("");
+    restoreParams();
+    paramsContainer.addEventListener("input", saveParams);
+    paramsContainer.addEventListener("change", saveParams);
   }
 }
 

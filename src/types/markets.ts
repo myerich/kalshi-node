@@ -152,6 +152,7 @@ export interface MarketsListParams {
   max_close_ts?: number;
   min_settled_ts?: number;
   max_settled_ts?: number;
+  min_updated_ts?: number;
   status?: "unopened" | "open" | "paused" | "closed" | "settled";
   mve_filter?: "only" | "exclude";
   limit?: number;

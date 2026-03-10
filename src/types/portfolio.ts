@@ -46,6 +46,7 @@ export interface QueuePositionsResponse {
 
 export interface QueuePositionByIdResponse {
   queue_position: number;
+  queue_position_fp?: string;
 }
 
 // ==================== Order Group Types ====================
@@ -53,6 +54,8 @@ export interface QueuePositionByIdResponse {
 export interface OrderGroup {
   id: string;
   is_auto_cancel_enabled: boolean;
+  contracts_limit?: number;
+  contracts_limit_fp?: string;
 }
 
 export interface OrderGroupsResponse {
@@ -61,6 +64,8 @@ export interface OrderGroupsResponse {
 
 export interface OrderGroupByIdResponse {
   is_auto_cancel_enabled: boolean;
+  contracts_limit?: number;
+  contracts_limit_fp?: string;
   orders: string[];
 }
 
@@ -169,7 +174,8 @@ export interface PortfolioOrdersParams {
 
 export interface QueuePositionsParams {
   market_tickers?: string;
-  event_tickers?: string;
+  event_ticker?: string;
+  subaccount?: number;
 }
 
 export interface PortfolioPositionsParams {

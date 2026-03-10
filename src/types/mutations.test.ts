@@ -19,9 +19,10 @@ describe("CreateOrderResponse", () => {
 });
 
 describe("DeleteOrderResponse", () => {
-  it("includes order and reduced_by", () => {
+  it("includes order, reduced_by, and reduced_by_fp", () => {
     expectTypeOf<DeleteOrderResponse["order"]>().toMatchTypeOf<Order>();
     expectTypeOf<DeleteOrderResponse["reduced_by"]>().toBeNumber();
+    expectTypeOf<DeleteOrderResponse["reduced_by_fp"]>().toBeString();
   });
 });
 

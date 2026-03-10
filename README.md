@@ -111,6 +111,8 @@ const client = new KalshiClient({
 | FCM | `getFCMOrders`, `getFCMPositions` |
 | Communications | `getCommunicationsID`, `getRFQs`, `createRFQ`, `getRFQ`, `deleteRFQ`, `getQuotes`, `createQuote`, `getQuote`, `deleteQuote`, `acceptQuote`, `confirmQuote` |
 
+**Polling tip:** `getEventsList`, `getMarketsList`, `getSeriesList`, and `getMilestones` all support a `min_updated_ts` param (Unix seconds) to efficiently poll for changes since a given timestamp.
+
 ## WebSocket Client (KalshiWebSocketClient)
 
 Located in `src/ws-api.ts`. Uses the native `WebSocket` API (Node.js 22+ or browser).

@@ -23,7 +23,12 @@ export interface RFQ {
   target_cost?: number;
   target_cost_dollars?: string;
   created_ts: string;
+  updated_ts?: string;
   status?: string;
+  rest_remainder?: boolean;
+  cancellation_reason?: string;
+  creator_user_id?: string;
+  cancelled_ts?: string;
   mve_collection_ticker?: string;
   mve_selected_legs?: RFQSelectedLeg[];
 }
@@ -31,7 +36,7 @@ export interface RFQ {
 export interface GetRFQsParams {
   cursor?: string;
   event_ticker?: string;
-  ticker?: string;
+  market_ticker?: string;
   subaccount?: number;
   limit?: number;
   status?: string;
@@ -59,7 +64,7 @@ export interface CreateRFQRequest {
 }
 
 export interface CreateRFQResponse {
-  rfq: RFQ;
+  id: string;
 }
 
 // ==================== Quote Types ====================
@@ -68,8 +73,11 @@ export interface Quote {
   quote_id: string;
   rfq_id: string;
   quote_creator_id: string;
+  rfq_creator_id?: string;
   market_ticker: string;
   event_ticker?: string;
+  contracts?: number;
+  contracts_fp?: string;
   yes_bid: number;
   no_bid: number;
   yes_bid_dollars: string;
@@ -81,13 +89,14 @@ export interface Quote {
   rfq_target_cost?: number;
   rfq_target_cost_dollars?: string;
   created_ts: string;
+  updated_ts?: string;
   status?: string;
 }
 
 export interface GetQuotesParams {
   cursor?: string;
   event_ticker?: string;
-  ticker?: string;
+  market_ticker?: string;
   limit?: number;
   status?: string;
   quote_creator_user_id?: string;
@@ -114,7 +123,7 @@ export interface CreateQuoteRequest {
 }
 
 export interface CreateQuoteResponse {
-  quote: Quote;
+  id: string;
 }
 
 export interface AcceptQuoteRequest {
