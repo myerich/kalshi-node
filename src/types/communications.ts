@@ -78,8 +78,6 @@ export interface Quote {
   event_ticker?: string;
   contracts?: number;
   contracts_fp?: string;
-  yes_bid: number;
-  no_bid: number;
   yes_bid_dollars: string;
   no_bid_dollars: string;
   yes_contracts_offered?: number;
@@ -116,8 +114,8 @@ export interface GetQuoteResponse {
 
 export interface CreateQuoteRequest {
   rfq_id: string;
-  yes_bid: number;
-  no_bid: number;
+  yes_bid_dollars: string;
+  no_bid_dollars: string;
   yes_contracts_offered?: number;
   no_contracts_offered?: number;
 }

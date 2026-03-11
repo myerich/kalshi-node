@@ -7,7 +7,7 @@ export interface Order {
   ticker: string;
   side: "yes" | "no";
   action: "buy" | "sell";
-  type: "limit" | "market";
+  type: "limit";
   yes_price_dollars: string;
   no_price_dollars: string;
   fill_count: number;
@@ -23,6 +23,7 @@ export interface Order {
   self_trade_prevention_type: "taker_at_cross" | "maker" | null;
   order_group_id: string | null;
   cancel_order_on_pause: boolean;
+  subaccount_number?: number;
 }
 
 export interface PortfolioOrdersResponse {
@@ -89,7 +90,6 @@ export interface MarketPosition {
   position: number;
   market_exposure_dollars: string;
   realized_pnl_dollars: string;
-  resting_orders_count: number;
   fees_paid_dollars: string;
   last_updated_ts: string;
 }
@@ -116,13 +116,13 @@ export interface Settlement {
   event_ticker: string;
   market_result: "yes" | "no" | "scalar" | "void";
   yes_count: number;
-  yes_total_cost: number;
   no_count: number;
-  no_total_cost: number;
-  revenue: number;
   settled_time: string;
   fee_cost: string;
-  value: number;
+  yes_total_cost_dollars?: string;
+  no_total_cost_dollars?: string;
+  yes_count_fp?: string;
+  no_count_fp?: string;
 }
 
 export interface PortfolioSettlementsResponse {
@@ -194,6 +194,7 @@ export interface PortfolioSettlementsParams {
   max_ts?: number;
   limit?: number;
   cursor?: string;
+  subaccount?: number;
 }
 
 export interface PortfolioFillsParams {

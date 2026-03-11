@@ -2,6 +2,45 @@
 
 A TypeScript Node.js client for the Kalshi Trade API, covering all REST endpoints and WebSocket channels per the official spec.
 
+## v2.0.0 Migration Guide
+
+This release tracks Kalshi API v3.10.0 and contains **breaking changes** effective March 12, 2026.
+
+### Breaking Changes
+
+| Change | Migration |
+|--------|-----------|
+| `Market.liquidity_dollars` removed | Field deprecated by Kalshi; no replacement |
+| `Order.type` no longer accepts `"market"` | Use `"limit"` only (market orders removed Feb 11, 2026) |
+| `CreateOrderData.type` only accepts `"limit"` | Market orders removed by Kalshi |
+| `AmendOrderData.client_order_id` now optional | No action needed |
+| `AmendOrderData.updated_client_order_id` now optional | No action needed |
+| `Settlement.yes_total_cost`, `no_total_cost`, `revenue`, `value` removed | Use `yes_total_cost_dollars`, `no_total_cost_dollars` |
+| `MarketPosition.resting_orders_count` removed | No replacement |
+| `TickerMessage.yes_bid`, `yes_ask` (cents) removed | Use `yes_bid_dollars`, `yes_ask_dollars` |
+| `TradeWsMessage.yes_price`, `no_price` (cents) removed | Use `yes_price_dollars`, `no_price_dollars` |
+| `FillWsMessage.yes_price` (cents) removed | Use `yes_price_dollars` |
+| `Quote.yes_bid`, `no_bid` (cents) removed | Use `yes_bid_dollars`, `no_bid_dollars` |
+| `CreateQuoteRequest.yes_bid`, `no_bid` (int) removed | Use `yes_bid_dollars: string`, `no_bid_dollars: string` |
+| `getPortfolioBalance()` signature changed | Now accepts optional `params?: { subaccount?: number }` |
+| `deletePortfolioOrder()` signature changed | Now accepts optional second param `params?: { subaccount?: number }` |
+| Order group methods accept optional `params` | `getPortfolioOrderGroups`, `getPortfolioOrderGroupById`, `deletePortfolioOrderGroup`, `resetPortfolioOrderGroup`, `triggerPortfolioOrderGroup` all accept optional `params?: { subaccount?: number }` |
+
+### New Additions
+
+- **`getHistoricalTrades(params?)`** — new method wrapping `GET /historical/trades`
+- **`Market.fractional_trading_enabled`** — boolean flag for fractional trading
+- **`Market.yes_bid_size_fp`, `yes_ask_size_fp`** — top-of-book sizes as fixed-point strings
+- **`Market.updated_ts`** — last updated timestamp
+- **`Trade.count_fp`** — fixed-point contract count
+- **`CreateOrderData.count_fp`** — fractional contract count for orders
+- **`Order.subaccount_number`** — subaccount identifier on orders
+- **`Settlement.yes_total_cost_dollars`, `no_total_cost_dollars`** — dollar amounts
+- **`Settlement.yes_count_fp`, `no_count_fp`** — fixed-point contract counts
+- **`TickerMessage` size fields**: `yes_bid_size_fp`, `yes_ask_size_fp`, `last_trade_size_fp`
+- **`PortfolioSettlementsParams.subaccount`** — filter settlements by subaccount
+- **`GetHistoricalTradesParams`** — exported from `kalshi-node/types`
+
 ## Specs
 
 - `specs/openapi.yaml` — REST API spec (source of truth for all REST endpoints, request params, response schemas)

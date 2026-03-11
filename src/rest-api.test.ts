@@ -940,6 +940,84 @@ describe("KalshiClient public methods", () => {
     expect(Array.isArray(body.orders)).toBe(true);
   });
 
+  // ---- Historical ----
+
+  it("getHistoricalTrades calls GET /historical/trades", async () => {
+    fetchSpy.mockResolvedValue(
+      mockResponse({ trades: [], cursor: "" })
+    );
+    await client.getHistoricalTrades({ ticker: "M1", limit: 50 });
+    expect(callUrl()).toContain("/historical/trades");
+    expect(callUrl()).toContain("ticker=M1");
+    expect(callUrl()).toContain("limit=50");
+    expect(callMethod()).toBe("GET");
+  });
+
+  it("getHistoricalTrades works without params", async () => {
+    fetchSpy.mockResolvedValue(
+      mockResponse({ trades: [], cursor: "" })
+    );
+    await client.getHistoricalTrades();
+    expect(callUrl()).toContain("/historical/trades");
+    expect(callMethod()).toBe("GET");
+  });
+
+  // ---- Subaccount params ----
+
+  it("getPortfolioBalance passes subaccount param", async () => {
+    fetchSpy.mockResolvedValue(
+      mockResponse({ balance: 5000, portfolio_value: 12000, updated_ts: 0 })
+    );
+    await client.getPortfolioBalance({ subaccount: 1 });
+    expect(callUrl()).toContain("subaccount=1");
+  });
+
+  it("deletePortfolioOrder passes subaccount param", async () => {
+    fetchSpy.mockResolvedValue(
+      mockResponse({ order: { order_id: "o1" }, reduced_by: 5, reduced_by_fp: "5.00" })
+    );
+    await client.deletePortfolioOrder("o1", { subaccount: 2 });
+    expect(callUrl()).toContain("/portfolio/orders/o1");
+    expect(callUrl()).toContain("subaccount=2");
+  });
+
+  it("getPortfolioOrderGroups passes subaccount param", async () => {
+    fetchSpy.mockResolvedValue(mockResponse({ order_groups: [] }));
+    await client.getPortfolioOrderGroups({ subaccount: 1 });
+    expect(callUrl()).toContain("/portfolio/order_groups");
+    expect(callUrl()).toContain("subaccount=1");
+  });
+
+  it("getPortfolioOrderGroupById passes subaccount param", async () => {
+    fetchSpy.mockResolvedValue(
+      mockResponse({ is_auto_cancel_enabled: true, orders: [] })
+    );
+    await client.getPortfolioOrderGroupById("g1", { subaccount: 1 });
+    expect(callUrl()).toContain("/portfolio/order_groups/g1");
+    expect(callUrl()).toContain("subaccount=1");
+  });
+
+  it("deletePortfolioOrderGroup passes subaccount param", async () => {
+    fetchSpy.mockResolvedValue(mockResponse({}));
+    await client.deletePortfolioOrderGroup("g1", { subaccount: 1 });
+    expect(callUrl()).toContain("/portfolio/order_groups/g1");
+    expect(callUrl()).toContain("subaccount=1");
+  });
+
+  it("resetPortfolioOrderGroup passes subaccount param", async () => {
+    fetchSpy.mockResolvedValue(mockResponse({}));
+    await client.resetPortfolioOrderGroup("g1", { subaccount: 1 });
+    expect(callUrl()).toContain("/portfolio/order_groups/g1/reset");
+    expect(callUrl()).toContain("subaccount=1");
+  });
+
+  it("triggerPortfolioOrderGroup passes subaccount param", async () => {
+    fetchSpy.mockResolvedValue(mockResponse({}));
+    await client.triggerPortfolioOrderGroup("g1", { subaccount: 1 });
+    expect(callUrl()).toContain("/portfolio/order_groups/g1/trigger");
+    expect(callUrl()).toContain("subaccount=1");
+  });
+
   // ---- Helpers ----
 
   function callUrl(): string {

@@ -151,13 +151,12 @@ export interface TickerMessage {
     market_id: string;
     /** Price in cents (integer 1-99) */
     price: number;
-    /** Yes bid in cents */
-    yes_bid: number;
-    /** Yes ask in cents */
-    yes_ask: number;
     price_dollars: string;
     yes_bid_dollars: string;
     yes_ask_dollars: string;
+    yes_bid_size_fp?: string;
+    yes_ask_size_fp?: string;
+    last_trade_size_fp?: string;
     volume: number;
     volume_fp: string;
     open_interest: number;
@@ -178,12 +177,8 @@ export interface TradeWsMessage {
   msg: {
     trade_id: string;
     market_ticker: string;
-    /** Price in cents (integer) */
-    yes_price: number;
     /** Dollar string, e.g. "0.360" */
     yes_price_dollars: string;
-    /** Price in cents (integer) */
-    no_price: number;
     /** Dollar string, e.g. "0.640" */
     no_price_dollars: string;
     count: number;
@@ -248,8 +243,6 @@ export interface FillWsMessage {
     market_ticker: string;
     is_taker: boolean;
     side: "yes" | "no";
-    /** Cents integer 1-99 */
-    yes_price: number;
     yes_price_dollars: string;
     count: number;
     /** Fixed-point 2 decimals */

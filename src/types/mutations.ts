@@ -28,7 +28,8 @@ export interface CreateOrderData {
   side: "yes" | "no";
   action: "buy" | "sell";
   count: number;
-  type: "limit" | "market";
+  count_fp?: string;
+  type: "limit";
   client_order_id?: string;
   yes_price_dollars?: string;
   no_price_dollars?: string;
@@ -47,8 +48,8 @@ export interface AmendOrderData {
   ticker: string;
   side: "yes" | "no";
   action: "buy" | "sell";
-  client_order_id: string;
-  updated_client_order_id: string;
+  client_order_id?: string;
+  updated_client_order_id?: string;
   count: number;
   yes_price_dollars?: string;
   no_price_dollars?: string;

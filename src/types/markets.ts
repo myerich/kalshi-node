@@ -31,7 +31,6 @@ export interface Market {
   can_close_early: boolean;
   open_interest: number;
   notional_value_dollars: string;
-  liquidity_dollars: string;
   expiration_value: string;
   rules_primary: string;
   rules_secondary: string;
@@ -50,6 +49,10 @@ export interface Market {
   mve_collection_ticker: string;
   primary_participant_key: string;
   is_provisional: boolean;
+  fractional_trading_enabled?: boolean;
+  yes_bid_size_fp?: string;
+  yes_ask_size_fp?: string;
+  updated_ts?: string;
 }
 
 export interface MarketsListResponse {
@@ -78,6 +81,7 @@ export interface Trade {
   yes_price_dollars: string;
   no_price_dollars: string;
   count: number;
+  count_fp?: string;
   taker_side: "yes" | "no";
   created_time: string;
 }

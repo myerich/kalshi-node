@@ -1,6 +1,6 @@
 {
   "name": "kalshi-node",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "description": "TypeScript REST + WebSocket client for the Kalshi Trade API v2",
   "type": "module",
   "main": "dist/index.js",

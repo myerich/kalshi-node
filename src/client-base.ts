@@ -96,6 +96,7 @@ import type {
   GetHistoricalCandlesticksParams,
   GetHistoricalOrdersParams,
   GetHistoricalFillsParams,
+  GetHistoricalTradesParams,
   GetApiKeysResponse,
   CreateApiKeyRequest,
   CreateApiKeyResponse,
@@ -447,19 +448,21 @@ export abstract class KalshiClientBase {
 
   // ==================== Portfolio - Order Groups ====================
 
-  async getPortfolioOrderGroups(): Promise<OrderGroupsResponse> {
+  async getPortfolioOrderGroups(params?: { subaccount?: number }): Promise<OrderGroupsResponse> {
     return this.request<OrderGroupsResponse>("GET", "/portfolio/order_groups", {
+      params,
       auth: true,
     });
   }
 
   async getPortfolioOrderGroupById(
-    groupId: string
+    groupId: string,
+    params?: { subaccount?: number }
   ): Promise<OrderGroupByIdResponse> {
     return this.request<OrderGroupByIdResponse>(
       "GET",
       `/portfolio/order_groups/${groupId}`,
-      { auth: true }
+      { params, auth: true }
     );
   }
 
@@ -473,27 +476,27 @@ export abstract class KalshiClientBase {
     );
   }
 
-  async deletePortfolioOrderGroup(groupId: string): Promise<void> {
+  async deletePortfolioOrderGroup(groupId: string, params?: { subaccount?: number }): Promise<void> {
     await this.request<Record<string, never>>(
       "DELETE",
       `/portfolio/order_groups/${groupId}`,
-      { auth: true }
+      { params, auth: true }
     );
   }
 
-  async resetPortfolioOrderGroup(groupId: string): Promise<void> {
+  async resetPortfolioOrderGroup(groupId: string, params?: { subaccount?: number }): Promise<void> {
     await this.request<Record<string, never>>(
       "PUT",
       `/portfolio/order_groups/${groupId}/reset`,
-      { auth: true }
+      { params, auth: true }
     );
   }
 
-  async triggerPortfolioOrderGroup(groupId: string): Promise<void> {
+  async triggerPortfolioOrderGroup(groupId: string, params?: { subaccount?: number }): Promise<void> {
     await this.request<Record<string, never>>(
       "PUT",
       `/portfolio/order_groups/${groupId}/trigger`,
-      { auth: true }
+      { params, auth: true }
     );
   }
 
@@ -510,8 +513,8 @@ export abstract class KalshiClientBase {
 
   // ==================== Portfolio - Balance ====================
 
-  async getPortfolioBalance(): Promise<Balance> {
-    return this.request<Balance>("GET", "/portfolio/balance", { auth: true });
+  async getPortfolioBalance(params?: { subaccount?: number }): Promise<Balance> {
+    return this.request<Balance>("GET", "/portfolio/balance", { params, auth: true });
   }
 
   async getPortfolioSubaccountBalances(): Promise<SubaccountBalancesResponse> {
@@ -604,11 +607,11 @@ export abstract class KalshiClientBase {
     });
   }
 
-  async deletePortfolioOrder(orderId: string): Promise<DeleteOrderResponse> {
+  async deletePortfolioOrder(orderId: string, params?: { subaccount?: number }): Promise<DeleteOrderResponse> {
     return this.request<DeleteOrderResponse>(
       "DELETE",
       `/portfolio/orders/${orderId}`,
-      { auth: true }
+      { params, auth: true }
     );
   }
 
@@ -753,6 +756,12 @@ export abstract class KalshiClientBase {
       params,
       auth: true,
     });
+  }
+
+  async getHistoricalTrades(
+    params?: GetHistoricalTradesParams
+  ): Promise<TradesResponse> {
+    return this.request<TradesResponse>("GET", "/historical/trades", { params });
   }
 
   // ==================== FCM ====================

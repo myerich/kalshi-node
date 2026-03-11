@@ -33,3 +33,11 @@ export interface GetHistoricalFillsParams {
   limit?: number;
   cursor?: string;
 }
+
+export interface GetHistoricalTradesParams {
+  ticker?: string;
+  min_ts?: number;
+  max_ts?: number;
+  limit?: number;
+  cursor?: string;
+}
