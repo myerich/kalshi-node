@@ -526,7 +526,6 @@ describe("TradeWsMessage", () => {
         market_ticker: "MKT-1",
         yes_price_dollars: "0.55",
         no_price_dollars: "0.45",
-        count: 10,
         count_fp: "10.00",
         taker_side: "yes",
         ts: 1700000000,
@@ -534,7 +533,7 @@ describe("TradeWsMessage", () => {
     };
     expect(msg.type).toBe("trade");
     expect(msg.msg.trade_id).toBe("t-1");
-    expect(msg.msg.count).toBe(10);
+    expect(msg.msg.count_fp).toBe("10.00");
   });
 
   it("enforces taker_side union", () => {
@@ -558,7 +557,6 @@ describe("TradeWsMessage", () => {
           market_ticker: "",
           yes_price_dollars: "0.50",
           no_price_dollars: "0.50",
-          count: 0,
           count_fp: "0.00",
           taker_side: side,
           ts: 0,
@@ -1179,7 +1177,6 @@ describe("WebSocketMessage", () => {
         market_ticker: "MKT-1",
         yes_price_dollars: "0.55",
         no_price_dollars: "0.45",
-        count: 1,
         count_fp: "1.00",
         taker_side: "yes",
         ts: 0,

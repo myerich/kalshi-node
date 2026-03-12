@@ -189,16 +189,10 @@ export interface TradeWsMessage {
   msg: {
     trade_id: string;
     market_ticker: string;
-    /** Yes side price in cents (integer 1-99) — spec-defined but not sent by server; use yes_price_dollars */
-    yes_price?: number;
     /** Dollar string, e.g. "0.360" */
     yes_price_dollars: string;
-    /** No side price in cents (integer 1-99) — spec-defined but not sent by server; use no_price_dollars */
-    no_price?: number;
     /** Dollar string, e.g. "0.640" */
     no_price_dollars: string;
-    /** Integer contract count — spec-defined but not sent by server; use count_fp */
-    count?: number;
     /** Fixed-point contracts traded (2 decimals) */
     count_fp: string;
     taker_side: "yes" | "no";
