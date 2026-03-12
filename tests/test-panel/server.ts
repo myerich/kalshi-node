@@ -215,6 +215,6 @@ wss.on("connection", (browserWs, req) => {
 
 server.listen(PORT, () => {
   console.log(`[Test Panel Server] Proxy running on http://localhost:${PORT}`);
-  console.log(`[Test Panel Server] Open http://localhost:5173 in your browser`);
+  console.log(`[Test Panel Server] Open http://localhost:4000 in your browser`);
   console.log(`[Test Panel Server] (Start Vite dev server with: npm run test:panel:ui)`);
 });
