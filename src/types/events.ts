@@ -15,6 +15,8 @@ export interface Event {
   strike_date: string;
   strike_period: string;
   markets?: Market[];
+  /** ISO 8601 timestamp of when this event's metadata was last updated. */
+  last_updated_ts?: string;
 }
 
 export interface Milestone {

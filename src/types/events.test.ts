@@ -39,45 +39,37 @@ describe("Event", () => {
       ticker: "MKT-1",
       event_ticker: "EVT-1",
       market_type: "binary",
-      title: "Test",
-      subtitle: "",
-      yes_subtitle: "",
-      no_subtitle: "",
+      yes_sub_title: "",
+      no_sub_title: "",
       created_time: "",
+      updated_time: "",
       open_time: "",
       close_time: "",
       latest_expiration_time: "",
       settlement_timer_seconds: 0,
       status: "open",
       yes_bid_dollars: "0",
+      yes_bid_size_fp: "0.0000",
       yes_ask_dollars: "0",
+      yes_ask_size_fp: "0.0000",
       no_bid_dollars: "0",
       no_ask_dollars: "0",
       last_price_dollars: "0",
-      volume: 0,
-      volume_24h: 0,
+      previous_yes_bid_dollars: "0",
+      previous_yes_ask_dollars: "0",
+      previous_price_dollars: "0",
+      volume_fp: "0.0000",
+      volume_24h_fp: "0.0000",
+      open_interest_fp: "0.0000",
+      notional_value_dollars: "0",
       result: "",
       can_close_early: false,
-      open_interest: 0,
-      notional_value_dollars: "0",
+      fractional_trading_enabled: false,
       expiration_value: "",
       rules_primary: "",
       rules_secondary: "",
       price_level_structure: "",
       price_ranges: [],
-      expected_expiration_time: "",
-      settlement_value_dollars: "",
-      settlement_ts: "",
-      fee_waiver_expiration_time: "",
-      early_close_condition: "",
-      strike_type: "",
-      floor_strike: "",
-      cap_strike: "",
-      functional_strike: "",
-      custom_strike: {},
-      mve_collection_ticker: "",
-      primary_participant_key: "",
-      is_provisional: false,
     };
     const eventWithMarkets: Event = { ...validEvent, markets: [market] };
     expect(eventWithMarkets.markets).toHaveLength(1);
@@ -89,6 +81,16 @@ describe("Event", () => {
       product_metadata: { nested: { deep: true }, count: 5 },
     };
     expect(e.product_metadata).toHaveProperty("nested");
+  });
+
+  it("last_updated_ts is optional", () => {
+    expectTypeOf<Event["last_updated_ts"]>().toEqualTypeOf<string | undefined>();
+    expect(validEvent.last_updated_ts).toBeUndefined();
+  });
+
+  it("accepts last_updated_ts when populated", () => {
+    const e: Event = { ...validEvent, last_updated_ts: "2025-06-01T12:00:00Z" };
+    expect(e.last_updated_ts).toBe("2025-06-01T12:00:00Z");
   });
 });
 

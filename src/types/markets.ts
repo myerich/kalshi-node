@@ -1,5 +1,12 @@
 // ==================== Market Types ====================
 
+export interface MveSelectedLeg {
+  event_ticker?: string;
+  market_ticker?: string;
+  side?: string;
+  yes_settlement_value_dollars?: string | null;
+}
+
 export interface PriceRange {
   start: string;
   end: string;
@@ -10,49 +17,54 @@ export interface Market {
   ticker: string;
   event_ticker: string;
   market_type: "binary" | "scalar";
-  title: string;
-  subtitle: string;
-  yes_subtitle: string;
-  no_subtitle: string;
+  yes_sub_title: string;
+  no_sub_title: string;
   created_time: string;
+  updated_time: string;
   open_time: string;
   close_time: string;
   latest_expiration_time: string;
   settlement_timer_seconds: number;
   status: string;
   yes_bid_dollars: string;
+  yes_bid_size_fp: string;
   yes_ask_dollars: string;
+  yes_ask_size_fp: string;
   no_bid_dollars: string;
   no_ask_dollars: string;
   last_price_dollars: string;
-  volume: number;
-  volume_24h: number;
+  previous_yes_bid_dollars: string;
+  previous_yes_ask_dollars: string;
+  previous_price_dollars: string;
+  volume_fp: string;
+  volume_24h_fp: string;
+  open_interest_fp: string;
+  notional_value_dollars: string;
   result: string;
   can_close_early: boolean;
-  open_interest: number;
-  notional_value_dollars: string;
+  fractional_trading_enabled: boolean;
   expiration_value: string;
   rules_primary: string;
   rules_secondary: string;
   price_level_structure: string;
   price_ranges: PriceRange[];
-  expected_expiration_time: string;
-  settlement_value_dollars: string;
-  settlement_ts: string;
-  fee_waiver_expiration_time: string;
-  early_close_condition: string;
-  strike_type: string;
-  floor_strike: string;
-  cap_strike: string;
-  functional_strike: string;
-  custom_strike: Record<string, unknown>;
-  mve_collection_ticker: string;
-  primary_participant_key: string;
-  is_provisional: boolean;
-  fractional_trading_enabled?: boolean;
-  yes_bid_size_fp?: string;
-  yes_ask_size_fp?: string;
-  updated_ts?: string;
+  // Optional fields
+  expected_expiration_time?: string;
+  settlement_value_dollars?: string;
+  settlement_ts?: string;
+  fee_waiver_expiration_time?: string;
+  early_close_condition?: string;
+  strike_type?: string;
+  floor_strike?: string | number | null;
+  cap_strike?: string | number | null;
+  functional_strike?: string | null;
+  custom_strike?: Record<string, unknown> | null;
+  mve_collection_ticker?: string;
+  mve_selected_legs?: MveSelectedLeg[];
+  primary_participant_key?: string | null;
+  is_provisional?: boolean;
+  no_bid_size_fp?: string;
+  no_ask_size_fp?: string;
 }
 
 export interface MarketsListResponse {
@@ -80,8 +92,7 @@ export interface Trade {
   ticker: string;
   yes_price_dollars: string;
   no_price_dollars: string;
-  count: number;
-  count_fp?: string;
+  count_fp: string;
   taker_side: "yes" | "no";
   created_time: string;
 }
@@ -100,11 +111,15 @@ export interface OHLCDollars {
   close_dollars: string;
 }
 
-export interface PriceOHLC extends OHLCDollars {
-  mean_dollars: string;
-  previous_dollars: string;
-  min_dollars: string;
-  max_dollars: string;
+export interface PriceOHLC {
+  open_dollars: string | null;
+  low_dollars: string | null;
+  high_dollars: string | null;
+  close_dollars: string | null;
+  mean_dollars: string | null;
+  previous_dollars: string | null;
+  min_dollars: string | null;
+  max_dollars: string | null;
 }
 
 export interface Candlestick {
@@ -112,8 +127,8 @@ export interface Candlestick {
   yes_bid: OHLCDollars;
   yes_ask: OHLCDollars;
   price: PriceOHLC;
-  volume: number;
-  open_interest: number;
+  volume_fp: string;
+  open_interest_fp: string;
 }
 
 export interface MarketCandlesticks {
@@ -129,14 +144,15 @@ export interface BatchCandlesticksResponse {
 
 export interface IncentiveProgram {
   id: string;
+  market_id: string;
   market_ticker: string;
   incentive_type: "liquidity" | "volume";
   start_date: string;
   end_date: string;
   period_reward: number;
   paid_out: boolean;
-  discount_factor_bps: number;
-  target_size: number;
+  discount_factor_bps?: number | null;
+  target_size_fp?: string | null;
 }
 
 export interface IncentiveProgramsResponse {

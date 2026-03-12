@@ -44,6 +44,8 @@ describe("Series", () => {
       Record<string, unknown> | undefined
     >();
     expectTypeOf<Series["volume"]>().toEqualTypeOf<number | undefined>();
+    expectTypeOf<Series["volume_fp"]>().toEqualTypeOf<string | undefined>();
+    expectTypeOf<Series["last_updated_ts"]>().toEqualTypeOf<string | undefined>();
   });
 
   it("accepts optional fields populated", () => {
@@ -51,9 +53,13 @@ describe("Series", () => {
       ...validSeries,
       product_metadata: { key: "value" },
       volume: 1000,
+      volume_fp: "1000.0000",
+      last_updated_ts: "2025-06-01T12:00:00Z",
     };
     expect(withOptionals.volume).toBe(1000);
     expect(withOptionals.product_metadata).toEqual({ key: "value" });
+    expect(withOptionals.volume_fp).toBe("1000.0000");
+    expect(withOptionals.last_updated_ts).toBe("2025-06-01T12:00:00Z");
   });
 
   it("enforces fee_type union", () => {

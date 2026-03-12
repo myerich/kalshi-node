@@ -18,7 +18,10 @@ export interface Series {
   fee_multiplier: number;
   additional_prohibitions: string[];
   product_metadata?: Record<string, unknown>;
-  volume?: number;
+  /** String representation of total contracts traded across all events in this series (fixed-point count). */
+  volume_fp?: string;
+  /** ISO 8601 timestamp of when this series' metadata was last updated. */
+  last_updated_ts?: string;
 }
 
 export interface SeriesListResponse {

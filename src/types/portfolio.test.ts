@@ -38,11 +38,12 @@ describe("Order", () => {
     side: "yes",
     action: "buy",
     type: "limit",
+    status: "resting",
     yes_price_dollars: "0.55",
     no_price_dollars: "0.45",
-    fill_count: 5,
-    remaining_count: 5,
-    initial_count: 10,
+    fill_count_fp: "5.0000",
+    remaining_count_fp: "5.0000",
+    initial_count_fp: "10.0000",
     taker_fees_dollars: "0.02",
     maker_fees_dollars: "0.01",
     taker_fill_cost_dollars: "2.75",
@@ -64,7 +65,17 @@ describe("Order", () => {
   });
 
   it("enforces type union", () => {
-    expectTypeOf<Order["type"]>().toEqualTypeOf<"limit">();
+    expectTypeOf<Order["type"]>().toEqualTypeOf<"limit" | "market">();
+  });
+
+  it("fill count fields are required strings", () => {
+    expectTypeOf<Order["fill_count_fp"]>().toBeString();
+    expectTypeOf<Order["remaining_count_fp"]>().toBeString();
+    expectTypeOf<Order["initial_count_fp"]>().toBeString();
+  });
+
+  it("status is a required string", () => {
+    expectTypeOf<Order["status"]>().toBeString();
   });
 
   it("enforces nullable fields", () => {
@@ -79,7 +90,8 @@ describe("Order", () => {
 
   it("constructs with all fields populated", () => {
     expect(validOrder.order_id).toBe("ord-1");
-    expect(validOrder.fill_count).toBe(5);
+    expect(validOrder.fill_count_fp).toBe("5.0000");
+    expect(validOrder.status).toBe("resting");
     expectTypeOf(validOrder.cancel_order_on_pause).toBeBoolean();
   });
 
@@ -111,9 +123,11 @@ describe("Order", () => {
     }
   });
 
-  it("constructs with type limit", () => {
-    const o: Order = { ...validOrder, type: "limit" };
-    expect(o.type).toBe("limit");
+  it("constructs with each type variant", () => {
+    for (const type of ["limit", "market"] as const) {
+      const o: Order = { ...validOrder, type };
+      expect(o.type).toBe(type);
+    }
   });
 
   it("constructs with each self_trade_prevention_type variant", () => {
@@ -144,11 +158,12 @@ describe("PortfolioOrderResponse", () => {
       side: "yes",
       action: "buy",
       type: "limit",
+      status: "resting",
       yes_price_dollars: "0.55",
       no_price_dollars: "0.45",
-      fill_count: 0,
-      remaining_count: 10,
-      initial_count: 10,
+      fill_count_fp: "0.0000",
+      remaining_count_fp: "10.0000",
+      initial_count_fp: "10.0000",
       taker_fees_dollars: "0",
       maker_fees_dollars: "0",
       taker_fill_cost_dollars: "0",
@@ -168,14 +183,14 @@ describe("PortfolioOrderResponse", () => {
 // ==================== Queue Position ====================
 
 describe("QueuePosition", () => {
-  it("has all fields", () => {
+  it("has queue_position_fp string field", () => {
     const qp: QueuePosition = {
       order_id: "ord-1",
       market_ticker: "MKT-1",
-      queue_position: 3,
+      queue_position_fp: "3.0000",
     };
-    expect(qp.queue_position).toBe(3);
-    expectTypeOf<QueuePosition["queue_position"]>().toBeNumber();
+    expect(qp.queue_position_fp).toBe("3.0000");
+    expectTypeOf<QueuePosition["queue_position_fp"]>().toBeString();
   });
 });
 
@@ -183,7 +198,7 @@ describe("QueuePositionsResponse", () => {
   it("wraps array", () => {
     const response: QueuePositionsResponse = {
       queue_positions: [
-        { order_id: "ord-1", market_ticker: "MKT-1", queue_position: 1 },
+        { order_id: "ord-1", market_ticker: "MKT-1", queue_position_fp: "1.0000" },
       ],
     };
     expect(response.queue_positions).toHaveLength(1);
@@ -196,10 +211,10 @@ describe("QueuePositionsResponse", () => {
 });
 
 describe("QueuePositionByIdResponse", () => {
-  it("has numeric queue_position", () => {
-    const response: QueuePositionByIdResponse = { queue_position: 5 };
-    expect(response.queue_position).toBe(5);
-    expectTypeOf<QueuePositionByIdResponse["queue_position"]>().toBeNumber();
+  it("has queue_position_fp string", () => {
+    const response: QueuePositionByIdResponse = { queue_position_fp: "5.0000" };
+    expect(response.queue_position_fp).toBe("5.0000");
+    expectTypeOf<QueuePositionByIdResponse["queue_position_fp"]>().toBeString();
   });
 });
 
@@ -249,7 +264,7 @@ describe("CreateOrderGroupResponse", () => {
 // ==================== Balance ====================
 
 describe("Balance", () => {
-  it("uses numeric cents", () => {
+  it("uses numeric fields", () => {
     const balance: Balance = {
       balance: 10000,
       portfolio_value: 25000,
@@ -265,55 +280,93 @@ describe("Balance", () => {
 // ==================== Positions ====================
 
 describe("MarketPosition", () => {
-  it("has all fields with correct types", () => {
+  it("has all required fields with correct types", () => {
     const position: MarketPosition = {
       ticker: "MKT-1",
       total_traded_dollars: "100.00",
-      position: 10,
+      position_fp: "10.0000",
       market_exposure_dollars: "50.00",
       realized_pnl_dollars: "5.00",
       fees_paid_dollars: "0.50",
       last_updated_ts: "2025-01-01T00:00:00Z",
     };
     expect(position.ticker).toBe("MKT-1");
-    expect(position.position).toBe(10);
+    expect(position.position_fp).toBe("10.0000");
     expectTypeOf<MarketPosition["total_traded_dollars"]>().toBeString();
-    expectTypeOf<MarketPosition["position"]>().toBeNumber();
+    expectTypeOf<MarketPosition["position_fp"]>().toBeString();
   });
 
-  it("position can be zero or negative", () => {
+  it("position_fp can be zero or negative string", () => {
     const zero: MarketPosition = {
       ticker: "MKT-1",
       total_traded_dollars: "0",
-      position: 0,
+      position_fp: "0.0000",
       market_exposure_dollars: "0",
       realized_pnl_dollars: "0",
       fees_paid_dollars: "0",
-      last_updated_ts: "",
     };
-    expect(zero.position).toBe(0);
+    expect(zero.position_fp).toBe("0.0000");
 
-    const negative: MarketPosition = {
-      ...zero,
-      position: -5,
+    const negative: MarketPosition = { ...zero, position_fp: "-5.0000" };
+    expect(negative.position_fp).toBe("-5.0000");
+  });
+
+  it("resting_orders_count is optional", () => {
+    expectTypeOf<MarketPosition["resting_orders_count"]>().toEqualTypeOf<number | undefined>();
+    const pos: MarketPosition = {
+      ticker: "MKT-1",
+      total_traded_dollars: "0",
+      position_fp: "0.0000",
+      market_exposure_dollars: "0",
+      realized_pnl_dollars: "0",
+      fees_paid_dollars: "0",
+      resting_orders_count: 3,
     };
-    expect(negative.position).toBe(-5);
+    expect(pos.resting_orders_count).toBe(3);
+  });
+
+  it("last_updated_ts is optional", () => {
+    expectTypeOf<MarketPosition["last_updated_ts"]>().toEqualTypeOf<string | undefined>();
+    const pos: MarketPosition = {
+      ticker: "MKT-1",
+      total_traded_dollars: "0",
+      position_fp: "0.0000",
+      market_exposure_dollars: "0",
+      realized_pnl_dollars: "0",
+      fees_paid_dollars: "0",
+    };
+    expect(pos.last_updated_ts).toBeUndefined();
   });
 });
 
 describe("EventPosition", () => {
-  it("has all fields", () => {
+  it("has all required fields", () => {
     const position: EventPosition = {
       event_ticker: "EVT-1",
       total_cost_dollars: "200.00",
-      total_cost_shares: 20,
+      total_cost_shares_fp: "20.0000",
       event_exposure_dollars: "100.00",
       realized_pnl_dollars: "10.00",
       fees_paid_dollars: "1.00",
     };
     expect(position.event_ticker).toBe("EVT-1");
-    expectTypeOf<EventPosition["total_cost_shares"]>().toBeNumber();
+    expect(position.total_cost_shares_fp).toBe("20.0000");
+    expectTypeOf<EventPosition["total_cost_shares_fp"]>().toBeString();
     expectTypeOf<EventPosition["event_exposure_dollars"]>().toBeString();
+  });
+
+  it("resting_orders_count is optional", () => {
+    expectTypeOf<EventPosition["resting_orders_count"]>().toEqualTypeOf<number | undefined>();
+    const pos: EventPosition = {
+      event_ticker: "EVT-1",
+      total_cost_dollars: "0",
+      total_cost_shares_fp: "0.0000",
+      event_exposure_dollars: "0",
+      realized_pnl_dollars: "0",
+      fees_paid_dollars: "0",
+      resting_orders_count: 0,
+    };
+    expect(pos.resting_orders_count).toBe(0);
   });
 });
 
@@ -348,26 +401,49 @@ describe("Settlement", () => {
     >();
   });
 
-  it("constructs full object", () => {
+  it("constructs full object with required _fp fields", () => {
     const settlement: Settlement = {
       ticker: "MKT-1",
       event_ticker: "EVT-1",
       market_result: "yes",
-      yes_count: 10,
-      no_count: 0,
-      settled_time: "2025-06-01T00:00:00Z",
-      fee_cost: "50",
+      yes_count_fp: "10.0000",
+      no_count_fp: "0.0000",
       yes_total_cost_dollars: "55.00",
       no_total_cost_dollars: "0.00",
+      revenue: 55,
+      settled_time: "2025-06-01T00:00:00Z",
+      fee_cost: "50",
     };
     expect(settlement.ticker).toBe("MKT-1");
     expect(settlement.market_result).toBe("yes");
+    expect(settlement.yes_count_fp).toBe("10.0000");
     expect(settlement.yes_total_cost_dollars).toBe("55.00");
+    expect(settlement.revenue).toBe(55);
     expectTypeOf<Settlement["fee_cost"]>().toBeString();
-    expectTypeOf<Settlement["yes_total_cost_dollars"]>().toEqualTypeOf<string | undefined>();
-    expectTypeOf<Settlement["no_total_cost_dollars"]>().toEqualTypeOf<string | undefined>();
-    expectTypeOf<Settlement["yes_count_fp"]>().toEqualTypeOf<string | undefined>();
-    expectTypeOf<Settlement["no_count_fp"]>().toEqualTypeOf<string | undefined>();
+    expectTypeOf<Settlement["yes_count_fp"]>().toBeString();
+    expectTypeOf<Settlement["no_count_fp"]>().toBeString();
+    expectTypeOf<Settlement["revenue"]>().toBeNumber();
+  });
+
+  it("value is optional and nullable", () => {
+    expectTypeOf<Settlement["value"]>().toEqualTypeOf<number | null | undefined>();
+    const s: Settlement = {
+      ticker: "MKT-1",
+      event_ticker: "EVT-1",
+      market_result: "scalar",
+      yes_count_fp: "10.0000",
+      no_count_fp: "0.0000",
+      yes_total_cost_dollars: "55.00",
+      no_total_cost_dollars: "0.00",
+      revenue: 55,
+      settled_time: "",
+      fee_cost: "0",
+      value: 42,
+    };
+    expect(s.value).toBe(42);
+
+    const nullValue: Settlement = { ...s, value: null };
+    expect(nullValue.value).toBeNull();
   });
 
   it("constructs with each market_result variant", () => {
@@ -376,8 +452,11 @@ describe("Settlement", () => {
         ticker: "MKT-1",
         event_ticker: "EVT-1",
         market_result: result,
-        yes_count: 0,
-        no_count: 0,
+        yes_count_fp: "0.0000",
+        no_count_fp: "0.0000",
+        yes_total_cost_dollars: "0.00",
+        no_total_cost_dollars: "0.00",
+        revenue: 0,
         settled_time: "",
         fee_cost: "0",
       };
@@ -424,25 +503,64 @@ describe("Fill", () => {
     expectTypeOf<Fill["action"]>().toEqualTypeOf<"buy" | "sell">();
   });
 
-  it("constructs full object", () => {
+  it("constructs with all required fields", () => {
     const fill: Fill = {
       fill_id: "fill-1",
       trade_id: "trade-1",
       order_id: "ord-1",
       ticker: "MKT-1",
+      market_ticker: "MKT-1",
       side: "yes",
       action: "buy",
-      count: 5,
-      yes_price_fixed: "0.55",
-      no_price_fixed: "0.45",
+      count_fp: "5.0000",
+      yes_price_dollars: "0.55",
+      no_price_dollars: "0.45",
+      fee_cost: "0.0100",
       is_taker: true,
       client_order_id: "client-1",
       created_time: "2025-01-01T00:00:00Z",
       ts: 1700000000,
     };
     expect(fill.fill_id).toBe("fill-1");
+    expect(fill.count_fp).toBe("5.0000");
+    expect(fill.yes_price_dollars).toBe("0.55");
+    expect(fill.fee_cost).toBe("0.0100");
+    expect(fill.market_ticker).toBe("MKT-1");
     expect(fill.is_taker).toBe(true);
-    expectTypeOf<Fill["ts"]>().toBeNumber();
+  });
+
+  it("required fields are non-optional strings", () => {
+    expectTypeOf<Fill["market_ticker"]>().toBeString();
+    expectTypeOf<Fill["count_fp"]>().toBeString();
+    expectTypeOf<Fill["yes_price_dollars"]>().toBeString();
+    expectTypeOf<Fill["no_price_dollars"]>().toBeString();
+    expectTypeOf<Fill["fee_cost"]>().toBeString();
+  });
+
+  it("optional fields have correct types", () => {
+    expectTypeOf<Fill["client_order_id"]>().toEqualTypeOf<string | undefined>();
+    expectTypeOf<Fill["created_time"]>().toEqualTypeOf<string | undefined>();
+    expectTypeOf<Fill["ts"]>().toEqualTypeOf<number | undefined>();
+    expectTypeOf<Fill["subaccount_number"]>().toEqualTypeOf<number | null | undefined>();
+  });
+
+  it("subaccount_number accepts null", () => {
+    const fill: Fill = {
+      fill_id: "",
+      trade_id: "",
+      order_id: "",
+      ticker: "",
+      market_ticker: "",
+      side: "yes",
+      action: "buy",
+      count_fp: "0.0000",
+      yes_price_dollars: "0",
+      no_price_dollars: "0",
+      fee_cost: "0",
+      is_taker: false,
+      subaccount_number: null,
+    };
+    expect(fill.subaccount_number).toBeNull();
   });
 
   it("constructs with each side/action combination", () => {
@@ -458,15 +576,14 @@ describe("Fill", () => {
         trade_id: "",
         order_id: "",
         ticker: "",
+        market_ticker: "",
         side,
         action,
-        count: 0,
-        yes_price_fixed: "",
-        no_price_fixed: "",
+        count_fp: "0.0000",
+        yes_price_dollars: "0",
+        no_price_dollars: "0",
+        fee_cost: "0",
         is_taker: false,
-        client_order_id: "",
-        created_time: "",
-        ts: 0,
       };
       expect(f.side).toBe(side);
       expect(f.action).toBe(action);

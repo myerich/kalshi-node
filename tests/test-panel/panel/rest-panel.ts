@@ -106,6 +106,18 @@ export function mountRestPanel(container: HTMLElement): void {
 
   sendBtn.addEventListener("click", sendRequest);
 
+  paramsContainer.addEventListener("click", (e) => {
+    const btn = (e.target as HTMLElement).closest<HTMLElement>("[data-clear]");
+    if (!btn) return;
+    const input = paramsContainer.querySelector<HTMLInputElement>(
+      `[data-param="${btn.dataset.clear}"]`
+    );
+    if (input) {
+      input.value = "";
+      saveParams();
+    }
+  });
+
   renderForm();
 }
 
@@ -227,12 +239,20 @@ function buildParamSection(title: string, params: ParamDef[]): string {
         <option value="true">true</option>
         <option value="false">false</option>
       </select>`;
+      } else if (p.name.endsWith("_ts") && p.type === "number") {
+        input = `<div class="datetime-field">
+          <input type="datetime-local" data-param="${p.name}" data-ptype="timestamp" />
+          <button type="button" class="datetime-clear-btn" data-clear="${p.name}" title="Clear">✕</button>
+        </div>`;
       } else {
         const inputType = p.type === "number" ? "number" : "text";
         input = `<input type="${inputType}" data-param="${p.name}" data-ptype="${p.type}" placeholder="${p.name}" />`;
       }
 
-      return `<div class="param-field"><label>${p.name} ${reqMark}</label>${input}</div>`;
+      const hint = p.description
+        ? `<span class="param-hint">${p.description}</span>`
+        : "";
+      return `<div class="param-field"><label>${p.name} ${reqMark}</label>${input}${hint}</div>`;
     })
     .join("");
 
@@ -280,7 +300,7 @@ async function sendRequest(): Promise<void> {
       );
       const raw = el?.value?.trim() ?? "";
       if (raw === "") continue;
-      params[p.name] = coerce(raw, p.type);
+      params[p.name] = coerce(raw, el?.dataset.ptype ?? p.type);
     }
   }
 
@@ -293,7 +313,7 @@ async function sendRequest(): Promise<void> {
       );
       const raw = el?.value?.trim() ?? "";
       if (raw === "") continue;
-      data[p.name] = coerce(raw, p.type);
+      data[p.name] = coerce(raw, el?.dataset.ptype ?? p.type);
     }
     if (Object.keys(data).length === 0) data = undefined;
   }
@@ -347,6 +367,7 @@ function showError(msg: string): void {
 // ---- Utilities ----
 
 function coerce(raw: string, type: string): string | number | boolean {
+  if (type === "timestamp") return Math.floor(new Date(raw).getTime() / 1000);
   if (type === "number") return Number(raw);
   if (type === "boolean") return raw === "true";
   return raw;

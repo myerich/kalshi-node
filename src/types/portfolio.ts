@@ -7,12 +7,13 @@ export interface Order {
   ticker: string;
   side: "yes" | "no";
   action: "buy" | "sell";
-  type: "limit";
+  type: "limit" | "market";
+  status: string;
   yes_price_dollars: string;
   no_price_dollars: string;
-  fill_count: number;
-  remaining_count: number;
-  initial_count: number;
+  fill_count_fp: string;
+  remaining_count_fp: string;
+  initial_count_fp: string;
   taker_fees_dollars: string;
   maker_fees_dollars: string;
   taker_fill_cost_dollars: string;
@@ -23,7 +24,7 @@ export interface Order {
   self_trade_prevention_type: "taker_at_cross" | "maker" | null;
   order_group_id: string | null;
   cancel_order_on_pause: boolean;
-  subaccount_number?: number;
+  subaccount_number?: number | null;
 }
 
 export interface PortfolioOrdersResponse {
@@ -38,7 +39,7 @@ export interface PortfolioOrderResponse {
 export interface QueuePosition {
   order_id: string;
   market_ticker: string;
-  queue_position: number;
+  queue_position_fp: string;
 }
 
 export interface QueuePositionsResponse {
@@ -46,8 +47,7 @@ export interface QueuePositionsResponse {
 }
 
 export interface QueuePositionByIdResponse {
-  queue_position: number;
-  queue_position_fp?: string;
+  queue_position_fp: string;
 }
 
 // ==================== Order Group Types ====================
@@ -87,20 +87,24 @@ export interface Balance {
 export interface MarketPosition {
   ticker: string;
   total_traded_dollars: string;
-  position: number;
+  position_fp: string;
   market_exposure_dollars: string;
   realized_pnl_dollars: string;
   fees_paid_dollars: string;
-  last_updated_ts: string;
+  last_updated_ts?: string;
+  /** Aggregate size of resting orders in contract units. Described as deprecated in spec — may be absent. */
+  resting_orders_count?: number;
 }
 
 export interface EventPosition {
   event_ticker: string;
   total_cost_dollars: string;
-  total_cost_shares: number;
+  total_cost_shares_fp: string;
   event_exposure_dollars: string;
   realized_pnl_dollars: string;
   fees_paid_dollars: string;
+  /** Aggregate size of resting orders in contract units. Described as deprecated in spec — may be absent. */
+  resting_orders_count?: number;
 }
 
 export interface PortfolioPositionsResponse {
@@ -115,14 +119,14 @@ export interface Settlement {
   ticker: string;
   event_ticker: string;
   market_result: "yes" | "no" | "scalar" | "void";
-  yes_count: number;
-  no_count: number;
+  yes_count_fp: string;
+  yes_total_cost_dollars: string;
+  no_count_fp: string;
+  no_total_cost_dollars: string;
+  revenue: number;
   settled_time: string;
   fee_cost: string;
-  yes_total_cost_dollars?: string;
-  no_total_cost_dollars?: string;
-  yes_count_fp?: string;
-  no_count_fp?: string;
+  value?: number | null;
 }
 
 export interface PortfolioSettlementsResponse {
@@ -143,15 +147,19 @@ export interface Fill {
   trade_id: string;
   order_id: string;
   ticker: string;
+  market_ticker: string;
   side: "yes" | "no";
   action: "buy" | "sell";
-  count: number;
-  yes_price_fixed: string;
-  no_price_fixed: string;
+  count_fp: string;
+  yes_price_dollars: string;
+  no_price_dollars: string;
+  fee_cost: string;
   is_taker: boolean;
-  client_order_id: string;
-  created_time: string;
-  ts: number;
+  client_order_id?: string;
+  created_time?: string;
+  /** Unix timestamp when this fill was executed (legacy field). */
+  ts?: number;
+  subaccount_number?: number | null;
 }
 
 export interface PortfolioFillsResponse {

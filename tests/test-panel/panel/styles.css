@@ -75,7 +75,8 @@ label {
 
 select,
 input[type="text"],
-input[type="number"] {
+input[type="number"],
+input[type="datetime-local"] {
   background: var(--bg-input);
   color: var(--text);
   border: 1px solid var(--border);
@@ -188,10 +189,53 @@ select {
   margin-top: 2px;
 }
 
+.datetime-field {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 2px;
+}
+
+.datetime-field input[type="datetime-local"] {
+  flex: 1;
+  min-width: 0;
+  margin-top: 0;
+  color-scheme: dark;
+}
+
+.datetime-clear-btn {
+  flex-shrink: 0;
+  background: transparent;
+  color: var(--text-muted);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 6px 8px;
+  font-size: 0.75rem;
+  line-height: 1;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
+}
+
+.datetime-clear-btn:hover {
+  color: var(--text);
+  border-color: var(--text-muted);
+}
+
 .no-params {
   color: var(--text-muted);
   font-size: 0.85rem;
   font-style: italic;
+}
+
+.param-hint {
+  display: block;
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  margin-top: 3px;
+  font-style: italic;
+  text-transform: none;
+  letter-spacing: normal;
+  font-weight: normal;
 }
 
 /* ---- Send button ---- */
