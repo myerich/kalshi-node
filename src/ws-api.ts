@@ -307,10 +307,13 @@ export class KalshiWebSocketClient {
    */
   protected createWebSocket(
     url: string,
-    _authHeaders: WebSocketAuthHeaders | null
+    authHeaders: WebSocketAuthHeaders | null
   ): WebSocket {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return new (this.WebSocketImpl as any)(url);
+    return new (this.WebSocketImpl as any)(
+      url,
+      ...(authHeaders ? [{ headers: authHeaders }] : [])
+    );
   }
 
   private send(cmd: WebSocketCommand): void {

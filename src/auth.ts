@@ -1,5 +1,6 @@
 import * as crypto from "crypto";
 import * as fs from "fs";
+import type { WebSocketAuthHeaders } from "./types/websocket.js";
 
 export interface AuthConfig {
   apiKey: string;
@@ -80,7 +81,7 @@ export function generateHeaders(
   privateKeyPem: string,
   method: string,
   path: string
-): Record<string, string> {
+): WebSocketAuthHeaders {
   const timestamp = Date.now().toString();
   const uppercaseMethod = method.toUpperCase();
   const msgString = `${timestamp}${uppercaseMethod}${path}`;
