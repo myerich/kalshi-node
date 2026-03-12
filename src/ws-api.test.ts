@@ -5,7 +5,6 @@ import type {
   SubscribedMessage,
   TickerMessage,
   ErrorMessage,
-  WebSocketMessage,
 } from "./types/websocket";
 
 // ==================== Mock WebSocket ====================
@@ -128,6 +127,52 @@ function createTestableClient(
 
   return client;
 }
+
+// ==================== Shared Mock Data ====================
+
+/** Minimal valid TickerMessage matching the spec. */
+const MOCK_TICKER_MSG = {
+  type: "ticker" as const,
+  seq: 1,
+  sid: 1,
+  msg: {
+    market_ticker: "MKT-1",
+    market_id: "00000000-0000-0000-0000-000000000001",
+    price: 48,
+    yes_bid: 45,
+    yes_ask: 53,
+    price_dollars: "0.480",
+    yes_bid_dollars: "0.450",
+    yes_ask_dollars: "0.530",
+    volume: 100,
+    volume_fp: "100.00",
+    open_interest: 50,
+    open_interest_fp: "50.00",
+    dollar_volume: 48,
+    dollar_open_interest: 24,
+    ts: 1700000000,
+    time: "2023-11-14T22:13:20Z",
+  },
+};
+
+/** Minimal valid TradeWsMessage matching the spec. */
+const MOCK_TRADE_MSG = {
+  type: "trade" as const,
+  seq: 2,
+  sid: 1,
+  msg: {
+    trade_id: "d91bc706-ee49-470d-82d8-11418bda6fed",
+    market_ticker: "MKT-1",
+    yes_price: 50,
+    yes_price_dollars: "0.500",
+    no_price: 50,
+    no_price_dollars: "0.500",
+    count: 10,
+    count_fp: "10.00",
+    taker_side: "yes" as const,
+    ts: 1700000000,
+  },
+};
 
 // ==================== Tests ====================
 
@@ -345,13 +390,14 @@ describe("KalshiWebSocketClient", () => {
       const id = client.updateSubscription({
         sids: [42],
         market_tickers: ["MKT-2"],
+        action: "add_markets",
       });
 
       expect(client.lastMockWs!.send).toHaveBeenCalledWith(
         JSON.stringify({
           id,
           cmd: "update_subscription",
-          params: { sids: [42], market_tickers: ["MKT-2"] },
+          params: { sids: [42], market_tickers: ["MKT-2"], action: "add_markets" },
         })
       );
     });
@@ -367,18 +413,7 @@ describe("KalshiWebSocketClient", () => {
       const handler = vi.fn();
       client.on("ticker", handler);
 
-      const tickerMsg: TickerMessage = {
-        type: "ticker",
-        seq: 1,
-        sid: 42,
-        msg: {
-          market_ticker: "MKT-1",
-          yes_bid: "0.55",
-          yes_ask: "0.57",
-          no_bid: "0.43",
-          no_ask: "0.45",
-        },
-      };
+      const tickerMsg: TickerMessage = { ...MOCK_TICKER_MSG, sid: 42 };
       client.lastMockWs!._simulateMessage(tickerMsg);
 
       expect(handler).toHaveBeenCalledOnce();
@@ -393,18 +428,7 @@ describe("KalshiWebSocketClient", () => {
       client.on("ticker", handler);
       client.off("ticker", handler);
 
-      client.lastMockWs!._simulateMessage({
-        type: "ticker",
-        seq: 1,
-        sid: 1,
-        msg: {
-          market_ticker: "MKT-1",
-          yes_bid: "0",
-          yes_ask: "0",
-          no_bid: "0",
-          no_ask: "0",
-        },
-      });
+      client.lastMockWs!._simulateMessage(MOCK_TICKER_MSG);
 
       expect(handler).not.toHaveBeenCalled();
     });
@@ -416,21 +440,8 @@ describe("KalshiWebSocketClient", () => {
       const handler = vi.fn();
       client.once("ticker", handler);
 
-      const tickerMsg = {
-        type: "ticker",
-        seq: 1,
-        sid: 1,
-        msg: {
-          market_ticker: "MKT-1",
-          yes_bid: "0",
-          yes_ask: "0",
-          no_bid: "0",
-          no_ask: "0",
-        },
-      };
-
-      client.lastMockWs!._simulateMessage(tickerMsg);
-      client.lastMockWs!._simulateMessage(tickerMsg);
+      client.lastMockWs!._simulateMessage(MOCK_TICKER_MSG);
+      client.lastMockWs!._simulateMessage(MOCK_TICKER_MSG);
 
       expect(handler).toHaveBeenCalledOnce();
     });
@@ -442,33 +453,8 @@ describe("KalshiWebSocketClient", () => {
       const handler = vi.fn();
       client.on("message", handler);
 
-      client.lastMockWs!._simulateMessage({
-        type: "ticker",
-        seq: 1,
-        sid: 1,
-        msg: {
-          market_ticker: "MKT-1",
-          yes_bid: "0",
-          yes_ask: "0",
-          no_bid: "0",
-          no_ask: "0",
-        },
-      });
-
-      client.lastMockWs!._simulateMessage({
-        type: "trade",
-        seq: 2,
-        sid: 1,
-        msg: {
-          trade_id: "t-1",
-          market_ticker: "MKT-1",
-          yes_price: "0.5",
-          no_price: "0.5",
-          count: 1,
-          taker_side: "yes",
-          created_time: "",
-        },
-      });
+      client.lastMockWs!._simulateMessage(MOCK_TICKER_MSG);
+      client.lastMockWs!._simulateMessage(MOCK_TRADE_MSG);
 
       expect(handler).toHaveBeenCalledTimes(2);
     });
@@ -500,18 +486,7 @@ describe("KalshiWebSocketClient", () => {
       };
       client.on("ticker", throwingHandler);
 
-      client.lastMockWs!._simulateMessage({
-        type: "ticker",
-        seq: 1,
-        sid: 1,
-        msg: {
-          market_ticker: "MKT-1",
-          yes_bid: "0",
-          yes_ask: "0",
-          no_bid: "0",
-          no_ask: "0",
-        },
-      });
+      client.lastMockWs!._simulateMessage(MOCK_TICKER_MSG);
 
       expect(errorSpy).toHaveBeenCalledWith(
         expect.stringContaining("Error in 'ticker' handler"),
@@ -529,18 +504,7 @@ describe("KalshiWebSocketClient", () => {
       client.on("ticker", handler1);
       client.on("ticker", handler2);
 
-      client.lastMockWs!._simulateMessage({
-        type: "ticker",
-        seq: 1,
-        sid: 1,
-        msg: {
-          market_ticker: "MKT-1",
-          yes_bid: "0",
-          yes_ask: "0",
-          no_bid: "0",
-          no_ask: "0",
-        },
-      });
+      client.lastMockWs!._simulateMessage(MOCK_TICKER_MSG);
 
       expect(handler1).toHaveBeenCalledOnce();
       expect(handler2).toHaveBeenCalledOnce();

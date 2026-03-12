@@ -163,17 +163,16 @@ describe("Channel types", () => {
     expect(channels).toHaveLength(4);
   });
 
-  it("PrivateChannel includes all 7 private channels", () => {
+  it("PrivateChannel includes all 6 private channels", () => {
     const channels: PrivateChannel[] = [
       "orderbook_delta",
-      "orderbook_snapshot",
       "fill",
       "market_positions",
       "communications",
       "order_group_updates",
       "user_orders",
     ];
-    expect(channels).toHaveLength(7);
+    expect(channels).toHaveLength(6);
   });
 
   it("Channel is union of PublicChannel and PrivateChannel", () => {
@@ -473,11 +472,10 @@ describe("TickerMessage", () => {
         market_id: "uuid-abc",
         price: 55,
         price_dollars: "0.55",
+        yes_bid: 54,
+        yes_ask: 56,
         yes_bid_dollars: "0.54",
         yes_ask_dollars: "0.56",
-        yes_bid_size_fp: "100.00",
-        yes_ask_size_fp: "200.00",
-        last_trade_size_fp: "5.00",
         volume: 1000,
         volume_fp: "1000.00",
         open_interest: 500,
@@ -506,12 +504,6 @@ describe("TickerMessage", () => {
     expectTypeOf<TickerMessage["msg"]["price_dollars"]>().toBeString();
     expectTypeOf<TickerMessage["msg"]["yes_bid_dollars"]>().toBeString();
     expectTypeOf<TickerMessage["msg"]["yes_ask_dollars"]>().toBeString();
-  });
-
-  it("size fp fields are optional strings", () => {
-    expectTypeOf<TickerMessage["msg"]["yes_bid_size_fp"]>().toEqualTypeOf<string | undefined>();
-    expectTypeOf<TickerMessage["msg"]["yes_ask_size_fp"]>().toEqualTypeOf<string | undefined>();
-    expectTypeOf<TickerMessage["msg"]["last_trade_size_fp"]>().toEqualTypeOf<string | undefined>();
   });
 
   it("ts is a number (Unix seconds)", () => {
@@ -728,6 +720,7 @@ describe("FillWsMessage", () => {
         market_ticker: "MKT-1",
         is_taker: true,
         side: "yes",
+        yes_price: 55,
         yes_price_dollars: "0.55",
         count: 5,
         count_fp: "5.00",
@@ -1133,6 +1126,8 @@ describe("WebSocketMessage", () => {
         market_id: "uuid-1",
         price: 55,
         price_dollars: "0.55",
+        yes_bid: 54,
+        yes_ask: 56,
         yes_bid_dollars: "0.54",
         yes_ask_dollars: "0.56",
         volume: 0,

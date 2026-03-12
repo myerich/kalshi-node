@@ -76,7 +76,6 @@ export type ConnectionState =
 /** Channels that do not require authentication. */
 export type PublicChannel =
   | "ticker"
-  | "ticker_v2"
   | "trade"
   | "market_lifecycle_v2"
   | "multivariate";
@@ -161,14 +160,15 @@ export interface TickerMessage {
   msg: {
     market_ticker: string;
     market_id: string;
-    /** Price in cents (integer 1-99) */
+    /** Last traded price in cents (integer 1-99) */
     price: number;
     price_dollars: string;
+    /** Best bid price for yes side in cents (integer 1-99) */
+    yes_bid: number;
+    /** Best ask price for yes side in cents (integer 1-99) */
+    yes_ask: number;
     yes_bid_dollars: string;
     yes_ask_dollars: string;
-    yes_bid_size_fp?: string;
-    yes_ask_size_fp?: string;
-    last_trade_size_fp?: string;
     volume: number;
     volume_fp: string;
     open_interest: number;
@@ -189,12 +189,17 @@ export interface TradeWsMessage {
   msg: {
     trade_id: string;
     market_ticker: string;
+    /** Yes side price in cents (integer 1-99) — spec-defined but not sent by server; use yes_price_dollars */
+    yes_price?: number;
     /** Dollar string, e.g. "0.360" */
     yes_price_dollars: string;
+    /** No side price in cents (integer 1-99) — spec-defined but not sent by server; use no_price_dollars */
+    no_price?: number;
     /** Dollar string, e.g. "0.640" */
     no_price_dollars: string;
-    count: number;
-    /** Dollar string, e.g. "136.00" */
+    /** Integer contract count — spec-defined but not sent by server; use count_fp */
+    count?: number;
+    /** Fixed-point contracts traded (2 decimals) */
     count_fp: string;
     taker_side: "yes" | "no";
     /** Unix timestamp in seconds */
@@ -255,6 +260,8 @@ export interface FillWsMessage {
     market_ticker: string;
     is_taker: boolean;
     side: "yes" | "no";
+    /** Yes side price in cents (integer 1-99) */
+    yes_price: number;
     yes_price_dollars: string;
     count: number;
     /** Fixed-point 2 decimals */
