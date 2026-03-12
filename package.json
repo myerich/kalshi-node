@@ -37,11 +37,11 @@
     "test:e2e": "vitest run --config vitest.e2e.config.ts",
     "e2e": "npm run test:e2e",
     "prepare": "npm run build",
+    "dev": "npm run test:panel",
     "test:panel": "concurrently \"npm run test:panel:server\" \"npm run test:panel:ui\"",
     "test:panel:server": "tsx tests/test-panel/server.ts",
     "test:panel:ui": "vite --config tests/test-panel/vite.config.ts",
-    "panel": "npm run test:panel",
-    "docs": "typedoc"
+    "panel": "npm run test:panel"
   },
   "repository": {
     "type": "git",
@@ -62,8 +62,6 @@
     "concurrently": "^9.1.2",
     "dotenv": "^17.2.4",
     "tsx": "^4.19.4",
-    "typedoc": "^0.28.17",
-    "typedoc-plugin-markdown": "^4.10.0",
     "typescript": "^5.9.3",
     "vite": "^7.3.1",
     "vitest": "^4.0.18",

@@ -561,6 +561,9 @@ export const ENDPOINTS: EndpointDef[] = [
     endpoint: "/portfolio/order_groups",
     auth: true,
     category: "Portfolio",
+    queryParams: [
+      { name: "subaccount", type: "number", required: false },
+    ],
   },
   {
     name: "Get Order Group By ID",
@@ -569,6 +572,9 @@ export const ENDPOINTS: EndpointDef[] = [
     auth: true,
     category: "Portfolio",
     pathParams: ["groupId"],
+    queryParams: [
+      { name: "subaccount", type: "number", required: false },
+    ],
   },
   {
     name: "Create Order Group",
@@ -587,6 +593,9 @@ export const ENDPOINTS: EndpointDef[] = [
     auth: true,
     category: "Portfolio",
     pathParams: ["groupId"],
+    queryParams: [
+      { name: "subaccount", type: "number", required: false },
+    ],
   },
   {
     name: "Reset Order Group",
@@ -595,6 +604,9 @@ export const ENDPOINTS: EndpointDef[] = [
     auth: true,
     category: "Portfolio",
     pathParams: ["groupId"],
+    queryParams: [
+      { name: "subaccount", type: "number", required: false },
+    ],
   },
   {
     name: "Trigger Order Group",
@@ -603,6 +615,9 @@ export const ENDPOINTS: EndpointDef[] = [
     auth: true,
     category: "Portfolio",
     pathParams: ["groupId"],
+    queryParams: [
+      { name: "subaccount", type: "number", required: false },
+    ],
   },
   {
     name: "Update Order Group Limit",
@@ -624,6 +639,9 @@ export const ENDPOINTS: EndpointDef[] = [
     endpoint: "/portfolio/balance",
     auth: true,
     category: "Portfolio",
+    queryParams: [
+      { name: "subaccount", type: "number", required: false },
+    ],
   },
   {
     name: "Get Subaccount Balances",
@@ -675,6 +693,7 @@ export const ENDPOINTS: EndpointDef[] = [
       { name: "max_ts", type: "number", required: false },
       { name: "limit", type: "number", required: false },
       { name: "cursor", type: "string", required: false },
+      { name: "subaccount", type: "number", required: false },
     ],
   },
 
@@ -764,13 +783,11 @@ export const ENDPOINTS: EndpointDef[] = [
         name: "type",
         type: "string",
         required: true,
-        options: ["limit", "market"],
+        options: ["limit"],
       },
       { name: "client_order_id", type: "string", required: false },
-      { name: "yes_price", type: "number", required: false, description: "Yes price in cents (1-99)" },
-      { name: "no_price", type: "number", required: false, description: "No price in cents (1-99)" },
-      { name: "yes_price_dollars", type: "string", required: false, description: "Yes price as fixed-point dollars" },
-      { name: "no_price_dollars", type: "string", required: false, description: "No price as fixed-point dollars" },
+      { name: "yes_price_dollars", type: "string", required: false, description: "Yes price as fixed-point dollars (e.g. \"0.55\")" },
+      { name: "no_price_dollars", type: "string", required: false, description: "No price as fixed-point dollars (e.g. \"0.45\")" },
       { name: "expiration_ts", type: "number", required: false },
       {
         name: "time_in_force",
@@ -803,6 +820,9 @@ export const ENDPOINTS: EndpointDef[] = [
     auth: true,
     category: "Trading",
     pathParams: ["orderId"],
+    queryParams: [
+      { name: "subaccount", type: "number", required: false },
+    ],
   },
   {
     name: "Amend Order",
@@ -825,14 +845,12 @@ export const ENDPOINTS: EndpointDef[] = [
         required: true,
         options: ["buy", "sell"],
       },
-      { name: "client_order_id", type: "string", required: true },
-      { name: "updated_client_order_id", type: "string", required: true },
+      { name: "client_order_id", type: "string", required: false },
+      { name: "updated_client_order_id", type: "string", required: false },
       { name: "count", type: "number", required: false, description: "Updated quantity in whole contracts. Provide count or count_fp." },
       { name: "count_fp", type: "string", required: false, description: "Fixed-point string quantity. Provide count or count_fp." },
-      { name: "yes_price", type: "number", required: false, description: "Updated yes price in cents (1-99)" },
-      { name: "no_price", type: "number", required: false, description: "Updated no price in cents (1-99)" },
-      { name: "yes_price_dollars", type: "string", required: false, description: "Updated yes price as fixed-point dollars" },
-      { name: "no_price_dollars", type: "string", required: false, description: "Updated no price as fixed-point dollars" },
+      { name: "yes_price_dollars", type: "string", required: false, description: "Updated yes price as fixed-point dollars (e.g. \"0.55\")" },
+      { name: "no_price_dollars", type: "string", required: false, description: "Updated no price as fixed-point dollars (e.g. \"0.45\")" },
       { name: "subaccount", type: "number", required: false },
     ],
   },
@@ -990,6 +1008,20 @@ export const ENDPOINTS: EndpointDef[] = [
     ],
   },
   {
+    name: "Get Historical Trades",
+    method: "GET",
+    endpoint: "/historical/trades",
+    auth: false,
+    category: "Historical",
+    queryParams: [
+      { name: "ticker", type: "string", required: false },
+      { name: "min_ts", type: "number", required: false },
+      { name: "max_ts", type: "number", required: false },
+      { name: "limit", type: "number", required: false },
+      { name: "cursor", type: "string", required: false },
+    ],
+  },
+  {
     name: "Get Historical Orders",
     method: "GET",
     endpoint: "/historical/orders",
@@ -1115,9 +1147,10 @@ export const ENDPOINTS: EndpointDef[] = [
     category: "Communications",
     bodyParams: [
       { name: "rfq_id", type: "string", required: true },
-      { name: "yes_price", type: "number", required: false },
-      { name: "no_price", type: "number", required: false },
-      { name: "count", type: "number", required: true },
+      { name: "yes_bid_dollars", type: "string", required: true, description: "Yes bid as fixed-point dollars (e.g. \"0.55\")" },
+      { name: "no_bid_dollars", type: "string", required: true, description: "No bid as fixed-point dollars (e.g. \"0.45\")" },
+      { name: "yes_contracts_offered", type: "number", required: false },
+      { name: "no_contracts_offered", type: "number", required: false },
     ],
   },
   {

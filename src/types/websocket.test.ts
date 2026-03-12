@@ -472,11 +472,12 @@ describe("TickerMessage", () => {
         market_ticker: "MKT-1",
         market_id: "uuid-abc",
         price: 55,
-        yes_bid: 54,
-        yes_ask: 56,
         price_dollars: "0.55",
         yes_bid_dollars: "0.54",
         yes_ask_dollars: "0.56",
+        yes_bid_size_fp: "100.00",
+        yes_ask_size_fp: "200.00",
+        last_trade_size_fp: "5.00",
         volume: 1000,
         volume_fp: "1000.00",
         open_interest: 500,
@@ -490,23 +491,27 @@ describe("TickerMessage", () => {
     expect(msg.type).toBe("ticker");
     expect(msg.seq).toBe(1);
     expect(msg.msg.market_ticker).toBe("MKT-1");
-    expect(msg.msg.yes_bid).toBe(54);
+    expect(msg.msg.yes_bid_dollars).toBe("0.54");
   });
 
   it("type is literal 'ticker'", () => {
     expectTypeOf<TickerMessage["type"]>().toEqualTypeOf<"ticker">();
   });
 
-  it("price fields are numbers (cents integers)", () => {
+  it("price field is a number (cents integer)", () => {
     expectTypeOf<TickerMessage["msg"]["price"]>().toBeNumber();
-    expectTypeOf<TickerMessage["msg"]["yes_bid"]>().toBeNumber();
-    expectTypeOf<TickerMessage["msg"]["yes_ask"]>().toBeNumber();
   });
 
   it("dollar fields are strings", () => {
     expectTypeOf<TickerMessage["msg"]["price_dollars"]>().toBeString();
     expectTypeOf<TickerMessage["msg"]["yes_bid_dollars"]>().toBeString();
     expectTypeOf<TickerMessage["msg"]["yes_ask_dollars"]>().toBeString();
+  });
+
+  it("size fp fields are optional strings", () => {
+    expectTypeOf<TickerMessage["msg"]["yes_bid_size_fp"]>().toEqualTypeOf<string | undefined>();
+    expectTypeOf<TickerMessage["msg"]["yes_ask_size_fp"]>().toEqualTypeOf<string | undefined>();
+    expectTypeOf<TickerMessage["msg"]["last_trade_size_fp"]>().toEqualTypeOf<string | undefined>();
   });
 
   it("ts is a number (Unix seconds)", () => {
@@ -527,9 +532,7 @@ describe("TradeWsMessage", () => {
       msg: {
         trade_id: "t-1",
         market_ticker: "MKT-1",
-        yes_price: 55,
         yes_price_dollars: "0.55",
-        no_price: 45,
         no_price_dollars: "0.45",
         count: 10,
         count_fp: "10.00",
@@ -561,9 +564,7 @@ describe("TradeWsMessage", () => {
         msg: {
           trade_id: "",
           market_ticker: "",
-          yes_price: 50,
           yes_price_dollars: "0.50",
-          no_price: 50,
           no_price_dollars: "0.50",
           count: 0,
           count_fp: "0.00",
@@ -727,7 +728,6 @@ describe("FillWsMessage", () => {
         market_ticker: "MKT-1",
         is_taker: true,
         side: "yes",
-        yes_price: 55,
         yes_price_dollars: "0.55",
         count: 5,
         count_fp: "5.00",
@@ -742,15 +742,15 @@ describe("FillWsMessage", () => {
     expect(msg.type).toBe("fill");
     expect(msg.msg.trade_id).toBe("t-1");
     expect(msg.msg.is_taker).toBe(true);
-    expect(msg.msg.yes_price).toBe(55);
+    expect(msg.msg.yes_price_dollars).toBe("0.55");
   });
 
   it("trade_id replaces the old fill_id field", () => {
     expectTypeOf<FillWsMessage["msg"]["trade_id"]>().toBeString();
   });
 
-  it("yes_price is a number (cents, 1-99)", () => {
-    expectTypeOf<FillWsMessage["msg"]["yes_price"]>().toBeNumber();
+  it("yes_price_dollars is a dollar string", () => {
+    expectTypeOf<FillWsMessage["msg"]["yes_price_dollars"]>().toBeString();
   });
 
   it("enforces side and action unions", () => {
@@ -1132,8 +1132,6 @@ describe("WebSocketMessage", () => {
         market_ticker: "MKT-1",
         market_id: "uuid-1",
         price: 55,
-        yes_bid: 54,
-        yes_ask: 56,
         price_dollars: "0.55",
         yes_bid_dollars: "0.54",
         yes_ask_dollars: "0.56",
@@ -1184,9 +1182,7 @@ describe("WebSocketMessage", () => {
       msg: {
         trade_id: "t-1",
         market_ticker: "MKT-1",
-        yes_price: 55,
         yes_price_dollars: "0.55",
-        no_price: 45,
         no_price_dollars: "0.45",
         count: 1,
         count_fp: "1.00",

@@ -62,8 +62,8 @@ describe("CreateOrderData", () => {
     expectTypeOf<CreateOrderData["action"]>().toEqualTypeOf<"buy" | "sell">();
   });
 
-  it("enforces type union", () => {
-    expectTypeOf<CreateOrderData["type"]>().toEqualTypeOf<"limit" | "market">();
+  it("enforces type is limit-only", () => {
+    expectTypeOf<CreateOrderData["type"]>().toEqualTypeOf<"limit">();
   });
 
   it("optional fields have correct types", () => {
@@ -97,6 +97,19 @@ describe("CreateOrderData", () => {
     expectTypeOf<CreateOrderData["order_group_id"]>().toEqualTypeOf<
       string | undefined
     >();
+  });
+
+  it("count_fp is optional string", () => {
+    expectTypeOf<CreateOrderData["count_fp"]>().toEqualTypeOf<string | undefined>();
+    const o: CreateOrderData = {
+      ticker: "MKT-1",
+      side: "yes",
+      action: "buy",
+      count: 1,
+      type: "limit",
+      count_fp: "1.50",
+    };
+    expect(o.count_fp).toBe("1.50");
   });
 
   it("enforces time_in_force union", () => {
@@ -158,7 +171,22 @@ describe("CreateOrderData", () => {
 // ==================== AmendOrderData ====================
 
 describe("AmendOrderData", () => {
-  it("has all required fields", () => {
+  it("constructs with only required fields", () => {
+    const amend: AmendOrderData = {
+      ticker: "TICKER-1",
+      side: "yes",
+      action: "buy",
+      count: 5,
+    };
+    expect(amend.ticker).toBe("TICKER-1");
+  });
+
+  it("client_order_id and updated_client_order_id are optional", () => {
+    expectTypeOf<AmendOrderData["client_order_id"]>().toEqualTypeOf<string | undefined>();
+    expectTypeOf<AmendOrderData["updated_client_order_id"]>().toEqualTypeOf<string | undefined>();
+  });
+
+  it("constructs with client_order_id fields", () => {
     const amend: AmendOrderData = {
       ticker: "TICKER-1",
       side: "yes",

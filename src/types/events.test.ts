@@ -60,7 +60,6 @@ describe("Event", () => {
       can_close_early: false,
       open_interest: 0,
       notional_value_dollars: "0",
-      liquidity_dollars: "0",
       expiration_value: "",
       rules_primary: "",
       rules_secondary: "",

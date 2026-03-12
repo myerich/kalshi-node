@@ -64,7 +64,7 @@ describe("Order", () => {
   });
 
   it("enforces type union", () => {
-    expectTypeOf<Order["type"]>().toEqualTypeOf<"limit" | "market">();
+    expectTypeOf<Order["type"]>().toEqualTypeOf<"limit">();
   });
 
   it("enforces nullable fields", () => {
@@ -111,11 +111,9 @@ describe("Order", () => {
     }
   });
 
-  it("constructs with each type variant", () => {
-    for (const type of ["limit", "market"] as const) {
-      const o: Order = { ...validOrder, type };
-      expect(o.type).toBe(type);
-    }
+  it("constructs with type limit", () => {
+    const o: Order = { ...validOrder, type: "limit" };
+    expect(o.type).toBe("limit");
   });
 
   it("constructs with each self_trade_prevention_type variant", () => {
@@ -274,7 +272,6 @@ describe("MarketPosition", () => {
       position: 10,
       market_exposure_dollars: "50.00",
       realized_pnl_dollars: "5.00",
-      resting_orders_count: 2,
       fees_paid_dollars: "0.50",
       last_updated_ts: "2025-01-01T00:00:00Z",
     };
@@ -282,7 +279,6 @@ describe("MarketPosition", () => {
     expect(position.position).toBe(10);
     expectTypeOf<MarketPosition["total_traded_dollars"]>().toBeString();
     expectTypeOf<MarketPosition["position"]>().toBeNumber();
-    expectTypeOf<MarketPosition["resting_orders_count"]>().toBeNumber();
   });
 
   it("position can be zero or negative", () => {
@@ -292,7 +288,6 @@ describe("MarketPosition", () => {
       position: 0,
       market_exposure_dollars: "0",
       realized_pnl_dollars: "0",
-      resting_orders_count: 0,
       fees_paid_dollars: "0",
       last_updated_ts: "",
     };
@@ -359,19 +354,20 @@ describe("Settlement", () => {
       event_ticker: "EVT-1",
       market_result: "yes",
       yes_count: 10,
-      yes_total_cost: 5500,
       no_count: 0,
-      no_total_cost: 0,
-      revenue: 10000,
       settled_time: "2025-06-01T00:00:00Z",
       fee_cost: "50",
-      value: 10000,
+      yes_total_cost_dollars: "55.00",
+      no_total_cost_dollars: "0.00",
     };
     expect(settlement.ticker).toBe("MKT-1");
     expect(settlement.market_result).toBe("yes");
-    expect(settlement.revenue).toBe(10000);
+    expect(settlement.yes_total_cost_dollars).toBe("55.00");
     expectTypeOf<Settlement["fee_cost"]>().toBeString();
-    expectTypeOf<Settlement["value"]>().toBeNumber();
+    expectTypeOf<Settlement["yes_total_cost_dollars"]>().toEqualTypeOf<string | undefined>();
+    expectTypeOf<Settlement["no_total_cost_dollars"]>().toEqualTypeOf<string | undefined>();
+    expectTypeOf<Settlement["yes_count_fp"]>().toEqualTypeOf<string | undefined>();
+    expectTypeOf<Settlement["no_count_fp"]>().toEqualTypeOf<string | undefined>();
   });
 
   it("constructs with each market_result variant", () => {
@@ -381,13 +377,9 @@ describe("Settlement", () => {
         event_ticker: "EVT-1",
         market_result: result,
         yes_count: 0,
-        yes_total_cost: 0,
         no_count: 0,
-        no_total_cost: 0,
-        revenue: 0,
         settled_time: "",
         fee_cost: "0",
-        value: 0,
       };
       expect(s.market_result).toBe(result);
     }
@@ -577,8 +569,10 @@ describe("PortfolioSettlementsParams", () => {
       max_ts: 1700100000,
       limit: 25,
       cursor: "abc",
+      subaccount: 1,
     };
     expect(full.min_ts).toBe(1700000000);
+    expect(full.subaccount).toBe(1);
   });
 });
 

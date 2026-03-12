@@ -5,7 +5,7 @@
  * with server-side authentication using kalshi-node auth utilities.
  *
  * Usage: npx tsx tests/test-panel/server.ts
- * Then open http://localhost:5173 (Vite dev server proxies /api/* here)
+ * Then open http://localhost:4000 (Vite dev server proxies /api/* here)
  */
 
 import { createServer, type IncomingMessage, type ServerResponse } from "node:http";
@@ -17,7 +17,7 @@ import { generateHeaders, loadPrivateKey, loadPrivateKeyFromContent } from "../.
 // Load .env from project root
 config({ path: resolve(import.meta.dirname, "../../.env") });
 
-const PORT = parseInt(process.env.PROXY_PORT || "3001");
+const PORT = parseInt(process.env.PROXY_PORT || "4001");
 
 const KALSHI_PROD_BASE = "https://api.elections.kalshi.com/trade-api/v2";
 const KALSHI_DEV_BASE = "https://demo-api.kalshi.co/trade-api/v2";
