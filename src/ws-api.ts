@@ -26,7 +26,7 @@ import type {
   WebSocketEventMap,
   ActiveSubscription,
   WebSocketAuthHeaders,
-} from "./types/websocket";
+} from "./types/websocket.js";
 
 const PROD_WS_URL = "wss://api.elections.kalshi.com/trade-api/ws/v2";
 

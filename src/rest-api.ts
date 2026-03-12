@@ -1,8 +1,8 @@
 import * as crypto from "crypto";
-import { generateHeaders, loadPrivateKey, loadPrivateKeyFromContent } from "./auth";
-import { makeKalshiError } from "./errors";
-import { KalshiClientBase } from "./client-base";
-import type { RequestOptions } from "./client-base";
+import { generateHeaders, loadPrivateKey, loadPrivateKeyFromContent } from "./auth.js";
+import { makeKalshiError } from "./errors.js";
+import { KalshiClientBase } from "./client-base.js";
+import type { RequestOptions } from "./client-base.js";
 
 export interface KalshiClientConfig {
   apiKey?: string;

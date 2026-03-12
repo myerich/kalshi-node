@@ -1,6 +1,6 @@
 // ==================== Event Types ====================
 
-import type { Market } from "./markets";
+import type { Market } from "./markets.js";
 
 export interface Event {
   event_ticker: string;
@@ -55,7 +55,7 @@ export interface EventParams {
 
 export interface EventCandlesticksResponse {
   market_tickers: string[];
-  market_candlesticks: import("./markets").Candlestick[][];
+  market_candlesticks: import("./markets.js").Candlestick[][];
   adjusted_end_ts: number;
 }
 
@@ -112,8 +112,8 @@ export interface MultivariateEventsParams {
 export interface EventMetadataResponse {
   image_url: string;
   featured_image_url?: string;
-  market_details: import("./markets").MarketMetadata[];
-  settlement_sources: import("./series").SettlementSource[];
+  market_details: import("./markets.js").MarketMetadata[];
+  settlement_sources: import("./series.js").SettlementSource[];
   competition?: string | null;
   competition_scope?: string | null;
 }

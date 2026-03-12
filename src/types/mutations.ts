@@ -1,6 +1,6 @@
 // ==================== Order Mutation Types ====================
 
-import type { Order } from "./portfolio";
+import type { Order } from "./portfolio.js";
 
 export interface CreateOrderResponse {
   order: Order;
@@ -103,10 +103,10 @@ export interface UpdateOrderGroupLimitData {
 export interface CreateMarketInCollectionResponse {
   event_ticker: string;
   market_ticker: string;
-  market?: import("./markets").Market;
+  market?: import("./markets.js").Market;
 }
 
 export interface CreateMarketInCollectionData {
-  selected_markets: import("./events").TickerPair[];
+  selected_markets: import("./events.js").TickerPair[];
   with_market_payload?: boolean;
 }

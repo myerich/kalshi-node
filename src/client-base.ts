@@ -116,7 +116,7 @@ import type {
   CreateQuoteRequest,
   CreateQuoteResponse,
   AcceptQuoteRequest,
-} from "./types";
+} from "./types/index.js";
 
 export interface RequestOptions {
   params?: object;
