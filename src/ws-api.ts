@@ -51,6 +51,8 @@ export class KalshiWebSocketClient {
     KalshiWebSocketConfig;
 
   private readonly baseWsUrl: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private readonly WebSocketImpl: new (url: string, ...args: any[]) => WebSocket;
 
   private ws: WebSocket | null = null;
   private connectionState: ConnectionState = "disconnected";
@@ -73,6 +75,8 @@ export class KalshiWebSocketClient {
 
   constructor(config: KalshiWebSocketConfig = {}) {
     this.baseWsUrl = config.baseWsUrl ?? PROD_WS_URL;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    this.WebSocketImpl = (config.WebSocketImpl ?? WebSocket) as any;
     this.config = {
       ...config,
       autoReconnect: config.autoReconnect ?? true,
@@ -298,16 +302,15 @@ export class KalshiWebSocketClient {
   // ==================== Internals ====================
 
   /**
-   * Create a WebSocket instance. Override this for environments that
-   * support custom headers (e.g. Node.js `ws` library).
+   * Create a WebSocket instance. Controlled by `WebSocketImpl` in config (defaults
+   * to native global). Can still be overridden in subclasses for testing.
    */
   protected createWebSocket(
     url: string,
     _authHeaders: WebSocketAuthHeaders | null
   ): WebSocket {
-    // Native WebSocket API — no custom header support.
-    // Auth headers are ignored in browser environments.
-    return new WebSocket(url);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return new (this.WebSocketImpl as any)(url);
   }
 
   private send(cmd: WebSocketCommand): void {

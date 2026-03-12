@@ -131,6 +131,26 @@ function createTestableClient(
 
 // ==================== Tests ====================
 
+describe("WebSocketImpl config option", () => {
+  it("uses the provided WebSocketImpl constructor", async () => {
+    const instances: MockWebSocket[] = [];
+    class TrackingWebSocket extends MockWebSocket {
+      constructor(url: string) {
+        super(url);
+        instances.push(this);
+        queueMicrotask(() => this._simulateOpen());
+      }
+    }
+    const client = new KalshiWebSocketClient({
+      WebSocketImpl: TrackingWebSocket as unknown as typeof WebSocket,
+    });
+    await client.connect();
+    expect(instances).toHaveLength(1);
+    expect(instances[0].url).toBe("wss://api.elections.kalshi.com/trade-api/ws/v2");
+    client.disconnect();
+  });
+});
+
 describe("KalshiWebSocketClient", () => {
   beforeEach(() => {
     vi.useFakeTimers();

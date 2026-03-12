@@ -48,6 +48,18 @@ export interface KalshiWebSocketConfig {
 
   /** Max delay for exponential backoff in ms. Default: 60000 */
   reconnectMaxDelay?: number;
+
+  /**
+   * WebSocket constructor to use. Defaults to the native global `WebSocket`.
+   * Pass `WebSocket` from the `ws` npm package in Node.js server environments
+   * where the built-in experimental WebSocket is unreliable.
+   *
+   * @example (Node.js)
+   * import { WebSocket } from 'ws';
+   * new KalshiWebSocketClient({ WebSocketImpl: WebSocket });
+   */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  WebSocketImpl?: new (url: string, ...args: any[]) => WebSocket;
 }
 
 // ==================== Connection State ====================
